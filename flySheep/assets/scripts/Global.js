@@ -1,0 +1,3 @@
+window.Global = {
+    GameManager:null,
+}
