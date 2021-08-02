@@ -10,6 +10,8 @@ var State = cc.Enum(
     }
 )
 
+var Dust = require ("Dust");
+
 cc.Class({
     extends: cc.Component,
 
@@ -39,7 +41,10 @@ cc.Class({
        gravity:0,
 
        // 起跳速度
-       jumpSpeed:0
+       jumpSpeed:0,
+
+       // 尘土预制体
+       dustPrefab:cc.Prefab
     },
 
     onLoad () {
@@ -73,6 +78,13 @@ cc.Class({
     jumpAction:function(){
         this.state = State.Jump;
         this.currentSpeed = this.jumpSpeed;
+
+        this.spawnDust('DustUp');
+    },
+
+    spawnDust(aniName){
+        var obj = Global.SceneManager.spawnObj(this.dustPrefab,Dust,this.node);
+        obj.playAni(aniName);
     },
 
     init:function(){
@@ -106,6 +118,7 @@ cc.Class({
             case State.Drop:
                 if (this.node.y <= this.groundY){
                     this.state = State.DropEnd;
+                    this.spawnDust('DustDown');
                 }
                 break;
             

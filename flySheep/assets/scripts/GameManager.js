@@ -19,6 +19,7 @@ var Game = cc.Class({
     onLoad () {
         window.Global.GameManager = Game;
         this.state = state.Menu;
+        
 
         // 小样初始化
         this.sheep.init();
