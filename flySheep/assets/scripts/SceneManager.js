@@ -36,7 +36,7 @@ cc.Class({
                 // 归还节点
                 comArr.forEach(function(o) {
                     this.put(o);
-                })
+                }.bind(this))
                 // 返回节点
                 return obj;
             }

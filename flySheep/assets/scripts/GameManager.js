@@ -23,11 +23,16 @@ var Game = cc.Class({
 
         // 小样初始化
         this.sheep.init();
+
+        
+        
     },
 
     start () {
         
         this.sheep.runStart(); 
+        // 创建管道
+        Global.PipeMgr.startSpawnPipe();
     },
 
     // update (dt) {},
