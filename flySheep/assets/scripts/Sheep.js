@@ -30,7 +30,7 @@ cc.Class({
                     return ;
                 }
                 this._state = val;
-                this.updateAnimation();
+                this.updateSheepState();
            },
        },
 
@@ -93,10 +93,23 @@ cc.Class({
     },
 
     // 状态变更后改变动画
-    updateAnimation:function(){
+    updateSheepState:function(){
         var aniName = State[this._state];
         this.ani.stop();
         this.ani.play(aniName);
+
+        if (this.state == State.Dead) {
+            this.touchEnabled(false);
+        }
+
+    },
+
+    // 下落结束后的帧事件
+    onDropFinished:function () {
+        if (this.state !== State.Dead){
+            this.state = State.Run;
+        }
+        
     },
 
     // 游戏开始
@@ -105,6 +118,24 @@ cc.Class({
     },
     start () {
 
+    },
+
+     // 碰撞检测
+     onSheepCollision:function (other, self){
+        
+        if (this.state !== State.Dead){
+            var group = other.node.group;
+            if (group == "obstacle"){
+                // 碰撞，死亡
+                this.state = State.Dead;
+                
+                Global.Game.gameOver();
+               
+            }else if (group == "level"){
+                // 得分
+                cc.log ("get score !");
+            }
+        }
     },
 
     update (dt) {

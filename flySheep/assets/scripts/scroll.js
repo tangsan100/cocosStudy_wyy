@@ -15,6 +15,11 @@ cc.Class({
     },
 
     update (dt) {
+
+        if (Global.Game.isGameOver()){
+            return;
+        }
+
         // 获取当前x 坐标
         var x = this.node.x;
         // 获得本次的偏移量

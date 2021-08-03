@@ -7,7 +7,10 @@ cc.Class({
         //管道的预制体
         pipePrefab:cc.Prefab,
         // 产生频率
-        spawnInterval:0
+        spawnInterval:{
+            default:0.00,
+            type: cc.Float
+        }
     },
 
     onLoad () {
@@ -18,6 +21,11 @@ cc.Class({
     startSpawnPipe:function(){
         this.spawnPipe();
         this.schedule(this.spawnPipe,this.spawnInterval)
+    },
+
+    // 停止创建
+    stopSpawnPipe:function(){
+        this.unschedule(this.spawnPipe,this);
     },
 
     spawnPipe:function(){

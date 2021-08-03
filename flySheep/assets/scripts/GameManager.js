@@ -18,6 +18,7 @@ var Game = cc.Class({
 
     onLoad () {
         window.Global.GameManager = Game;
+        window.Global.Game = this;
         this.state = state.Menu;
         
 
@@ -29,11 +30,24 @@ var Game = cc.Class({
     },
 
     start () {
+
+        // 开启碰撞检测
+        cc.director.getCollisionManager().enabled = true;
         
         this.sheep.runStart(); 
         // 创建管道
         Global.PipeMgr.startSpawnPipe();
     },
+
+    gameOver:function () {
+        // 
+        this.state = state.Over;
+        Global.PipeMgr.stopSpawnPipe();
+    },
+
+    isGameOver:function(){
+        return this.state == state.Over;
+    }
 
     // update (dt) {},
 });

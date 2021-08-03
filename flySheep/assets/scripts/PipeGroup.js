@@ -50,6 +50,11 @@ cc.Class({
     },
 
     update (dt) {
+
+        if (Global.Game.isGameOver()){
+            return;
+        }
+
         var dis = this.moveSpeed*dt;
         this.node.x += dis;
 
