@@ -44,7 +44,25 @@ cc.Class({
        jumpSpeed:0,
 
        // 尘土预制体
-       dustPrefab:cc.Prefab
+       dustPrefab:cc.Prefab,
+
+       // 起跳音效
+       audioJump: {
+            type: cc.AudioClip,
+            default: null
+        },
+
+        // 得分音效
+       audioScore: {
+            type: cc.AudioClip,
+            default: null
+        },
+
+        // 死亡音效
+       audioDead: {
+            type: cc.AudioClip,
+            default: null
+        },
     },
 
     onLoad () {
@@ -80,6 +98,7 @@ cc.Class({
         this.currentSpeed = this.jumpSpeed;
 
         this.spawnDust('DustUp');
+        cc.audioEngine.play(this.audioJump, false, 1);
     },
 
     spawnDust(aniName){
@@ -100,6 +119,7 @@ cc.Class({
 
         if (this.state == State.Dead) {
             this.touchEnabled(false);
+            cc.audioEngine.play(this.audioDead, false, 1);
         }
 
     },
@@ -133,6 +153,7 @@ cc.Class({
                
             }else if (group == "level"){
                 // 得分
+                cc.audioEngine.play(this.audioScore, false, 1);
                 cc.log ("get score !");
             }
         }

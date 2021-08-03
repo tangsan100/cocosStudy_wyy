@@ -15,7 +15,6 @@ cc.Class({
 
         // 创建节点对象池
         this._pool = new cc.js.Pool(function(obj){
-            cc.log("obj destroy");
         },10)
 
         // get 方法为自定义方法

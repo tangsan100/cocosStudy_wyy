@@ -11,6 +11,10 @@ var Game = cc.Class({
 
     properties: {
        sheep:Sheep,
+       audioOver: {
+            type: cc.AudioClip,
+            default: null
+        },
     },
     statics:{
         state
@@ -32,7 +36,10 @@ var Game = cc.Class({
     start () {
 
         // 开启碰撞检测
-        cc.director.getCollisionManager().enabled = true;
+        var manager = cc.director.getCollisionManager();
+        manager.enabled = true;
+        // manager.enabledDebugDraw = true;
+        // manager.enabledDrawBoundingBox = true;
         
         this.sheep.runStart(); 
         // 创建管道
@@ -43,6 +50,7 @@ var Game = cc.Class({
         // 
         this.state = state.Over;
         Global.PipeMgr.stopSpawnPipe();
+        cc.audioEngine.play(this.audioOver, false, 1);
     },
 
     isGameOver:function(){

@@ -31,9 +31,9 @@ cc.Class({
     },
 
     initPos:function(){
-        this.node.position = cc.v2(0,0);
+        this.node.position = cc.v2(this.offsetX,0);
         // 下管道的位置
-        var posX = this.offsetX;
+        var posX = 0;
         var posBottomY = this.bottomVec.x + Math.random()*(this.bottomVec.y - this.bottomVec.x)
         this.bottomPipe.position = cc.v2(posX,posBottomY);
 
