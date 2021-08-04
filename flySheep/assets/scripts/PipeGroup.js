@@ -45,6 +45,7 @@ cc.Class({
 
     // onLoad () {},
 
+    // 移除管道
     removePipe:function(){
         Global.SceneManager.despawnObj(this);
     },
@@ -53,6 +54,10 @@ cc.Class({
 
         if (Global.Game.isGameOver()){
             return;
+        }
+
+        if (!this.node.active){
+            return ;
         }
 
         var dis = this.moveSpeed*dt;

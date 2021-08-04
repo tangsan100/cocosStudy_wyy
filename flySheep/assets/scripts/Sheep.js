@@ -70,6 +70,11 @@ cc.Class({
         this.touchEnabled(true);
     },
 
+    resetSheep(){
+        // this.node.y = 0;
+        this.touchEnabled(true);
+    },
+
     touchEnabled:function(flag){
         if (flag){
             // 注册输入事件
@@ -154,7 +159,7 @@ cc.Class({
             }else if (group == "level"){
                 // 得分
                 cc.audioEngine.play(this.audioScore, false, 1);
-                cc.log ("get score !");
+                userObj.addScore();
             }
         }
     },
@@ -176,7 +181,7 @@ cc.Class({
             
         }
         
-        if (this.state == State.Jump || this.state == State.Drop){
+        if (this.state == State.Jump || this.state == State.Drop || this.node.y > this.groundY){
             // 减速
             this.currentSpeed -= dt*this.gravity;
             // 更新高度

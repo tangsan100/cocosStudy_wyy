@@ -16,7 +16,7 @@ cc.Class({
 
     update (dt) {
 
-        if (Global.Game.isGameOver()){
+        if (!Global.Game.isGameStart()){
             return;
         }
 

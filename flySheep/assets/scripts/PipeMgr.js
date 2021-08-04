@@ -32,9 +32,25 @@ cc.Class({
         var obj = Global.SceneManager.spawnObj(this.pipePrefab,PipeGroup,this.node);
     },
 
-    start () {
+    // 管道重置
+    resetPipe(){
 
-    },
+        var children = this.node.children;
+        
+        var arr = [];
+
+        for (var i = 0; i < children.length; ++i){
+           
+            var node = children[i];
+            var comp = node.getComponent('PipeGroup');
+            arr.push(comp);
+        }
+
+        arr.forEach(comp => {
+            comp.removePipe();
+        });
+       
+    }
 
     // update (dt) {},
 });
