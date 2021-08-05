@@ -67,12 +67,12 @@ cc.Class({
 
     onLoad () {
         
-        this.touchEnabled(true);
+        // this.touchEnabled(true);
     },
 
     resetSheep(){
         // this.node.y = 0;
-        this.touchEnabled(true);
+        // this.touchEnabled(true);
     },
 
     touchEnabled:function(flag){
@@ -140,6 +140,7 @@ cc.Class({
     // 游戏开始
     runStart:function(){
         this.state = State.Run;
+        this.touchEnabled(true);
     },
     start () {
 
