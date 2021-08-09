@@ -1,0 +1,41 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "upAndDown",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 2.857142857142857,
+  "sample": 7,
+  "speed": 1,
+  "wrapMode": 2,
+  "curveData": {
+    "props": {
+      "position": [
+        {
+          "frame": 0,
+          "value": [
+            190.75,
+            312,
+            0
+          ]
+        },
+        {
+          "frame": 1.4285714285714286,
+          "value": [
+            190.75,
+            -91,
+            0
+          ]
+        },
+        {
+          "frame": 2.857142857142857,
+          "value": [
+            190.75,
+            312,
+            0
+          ]
+        }
+      ]
+    }
+  },
+  "events": []
+}

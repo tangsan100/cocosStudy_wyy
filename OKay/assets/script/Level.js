@@ -12,6 +12,11 @@ cc.Class({
         sounds:{
             type:[cc.AudioClip],
             default:[]
+        },
+
+        blackSound:{
+            type:cc.AudioClip,
+            default:null
         }
         
     },
@@ -30,9 +35,17 @@ cc.Class({
         this.currentLevel = level;
         this.childNode = this.node.getChildByName(''+level)
         this.childNode.active = true;
-        cc.log(this.childNode);
-        this.blockNum = this.childNode.children.length;
+       
+        var blockNum = this.childNode.children.length;
+
+        this.childNode.children.forEach(node => {
+            if (node.getComponent("Black")){
+                blockNum --;
+            }
+        });
+        this.blockNum = blockNum;
         this.curNum = 0;
+
     },
 
     playSound:function(){
@@ -60,6 +73,7 @@ cc.Class({
 
     // 恢复原样
     reset:function(){
+        this.curNum = 0;
         this.childNode.children.forEach(node => {
             if (!node.isBg){
                 node.active = true;
@@ -79,10 +93,13 @@ cc.Class({
         bg.position = node.position;
         bg.isBg = true;
         bg.angle = node.angle
+        bg.scaleX = node.scaleX;
+        bg.scaleY = node.scaleY;
+      
 
 
         // 动作处理
-        var scale = cc.scaleTo(0.5,1.2,1.2);
+        var scale = cc.scaleBy(0.5,1.2,1.2);
         var fade = cc.fadeOut(0.5);
         var spawn = cc.spawn(scale,fade);
         var func = cc.callFunc(function(){
@@ -92,6 +109,10 @@ cc.Class({
         bg.runAction(cc.sequence(spawn,func));
 
         this.playSound();
+    },
+
+    onCollisionBlack:function(tag,node){
+        cc.audioEngine.play(this.blackSound,false,1);
     },
 
     start () {

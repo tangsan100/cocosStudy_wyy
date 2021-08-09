@@ -23,6 +23,7 @@ cc.Class({
     // 点击开始
     onTouchStart:function(Event){
         // TODO 1. 触点地方显示小球
+        this.isMove = false
         cc.log('touch')
         var pos = Event.getLocation();
         this.startPos = this.node.parent.convertToNodeSpaceAR(pos);
@@ -57,6 +58,8 @@ cc.Class({
             return;
         }
 
+        this.isMove = true;
+
         this.rigidBody.linearVelocity = cc.v2(disX/dis*this.speed,disY/dis*this.speed);
 
     },
@@ -64,11 +67,17 @@ cc.Class({
     // 碰撞监听
     // 只在两个碰撞体开始接触时被调用一次
     onBeginContact: function (contact, selfCollider, otherCollider) {
+
+        if (!this.isMove) return;
+
         cc.log(otherCollider.tag)
         var tag = otherCollider.tag
         if (tag != 100){
             // 不是黑块
             Level.onCollision(tag,otherCollider.node);
+        }else if (tag == 100){
+            // 黑块
+            Level.onCollisionBlack(tag,otherCollider.node);
         }
     },
 
