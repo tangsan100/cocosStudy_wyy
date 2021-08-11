@@ -1,0 +1,11 @@
+{
+  "ver": "1.0.15",
+  "uuid": "6645c76a-4a55-44fa-8539-6c501fa30116",
+  "compiledShaders": [
+    {
+      "vert": "\n#define _IS_VERT_SHADER 1\n\nprecision highp float;\n\nuniform mat4 cc_matViewProj;\nattribute vec3 a_position;\nattribute vec2 a_uv0;\nvarying vec2 uv0;\nvoid main () {\n    vec4 pos = cc_matViewProj * vec4(a_position, 1);\n    gl_Position = pos;\n    uv0 = a_uv0;\n}\n\n\n",
+      "frag": "\n#define _IS_FRAG_SHADER 1\n\nprecision highp float;\n\nuniform vec4  icolor0;\nuniform sampler2D texture;\nuniform vec3 iResolution;\nvarying vec2 uv0;\n\n  bool checkIsMakeOutline(vec2 pos){\n    \n    float alpha = 0.03;\n    \n    float outlineWidth = 0.01;\n    vec4 color = texture2D(texture, pos);\n    if(color.a <= alpha || outlineWidth == 0.0)return false;\n \n    \n    color = texture2D(texture, pos + vec2(0, outlineWidth));\n    if(color.a <= alpha)return true;\n    color = texture2D(texture, pos + vec2(outlineWidth, outlineWidth));\n    if(color.a <= alpha)return true;\n    color = texture2D(texture, pos + vec2(outlineWidth, 0));\n    if(color.a <= alpha)return true;\n    color = texture2D(texture, pos + vec2(outlineWidth, -outlineWidth));\n    if(color.a <= alpha)return true;\n    color = texture2D(texture, pos + vec2(0, -outlineWidth));\n    if(color.a <= alpha)return true;\n    color = texture2D(texture, pos + vec2(-outlineWidth, -outlineWidth));\n    if(color.a <= alpha)return true;\n    color = texture2D(texture, pos + vec2(-outlineWidth, 0));\n    if(color.a <= alpha)return true;\n    color = texture2D(texture, pos + vec2(-outlineWidth, outlineWidth));\n    if(color.a <= alpha)return true;\n    \n    \n    if(pos.x <= outlineWidth || pos.x >= 1.0 - outlineWidth)return true;\n    if(pos.y <= outlineWidth || pos.y >= 1.0 - outlineWidth)return true;\n \n    return false;\n  }\n\nvoid main()\n{\n    \n\n    \n    \n    \n\n    \n    \n    \n\n    \n    \n    \n    \n    vec4 o = vec4(1, 1, 1, 1);\n\n    o *= texture2D(texture, uv0);\n\n    o*= icolor0;\n\n    \n\n    if (checkIsMakeOutline(uv0)){\n      o = vec4(0,0,0,0.8);\n    }\n\n    gl_FragColor = o;\n}\n\n\n"
+    }
+  ],
+  "subMetas": {}
+}

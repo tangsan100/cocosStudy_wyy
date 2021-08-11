@@ -1,0 +1,130 @@
+// Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.  
+
+// Note: Current format version is experiment, the format may be changed.
+// The future format may not be compatible, you may need to update the script manually.
+
+// 注意：当前版本的格式是实验性的，之后还会进行修改。
+// 后续版本的格式不保证兼容当前格式，可能需要手动升级到最新版本。，
+%{
+  techniques: [
+    {
+      passes: [
+        {
+          vert: vs
+          frag: fs
+          cullMode: none
+          blend: true
+        }
+      ]
+      layer: 0
+    }
+  ]
+  properties: {
+    texture: {
+      type: sampler2D
+      value: null
+    }
+    iResolution:{
+    type:vec3,
+    displayName:'分辨率'
+    value:[1280,720,0]
+  }
+  icolor0:{
+    type:vec4,
+    displayName:'颜色',
+    value:[1,0,0,1]
+  }
+  }
+%}
+
+%% vs {
+
+precision highp float;
+
+uniform mat4 cc_matViewProj;
+attribute vec3 a_position;
+attribute vec2 a_uv0;
+varying vec2 uv0;
+void main () {
+    vec4 pos = cc_matViewProj * vec4(a_position, 1);
+    gl_Position = pos;
+    uv0 = a_uv0;
+}
+}
+
+%% fs {
+
+precision highp float;
+
+uniform vec4  icolor0;
+uniform sampler2D texture;
+uniform vec3 iResolution;
+varying vec2 uv0;
+
+
+//检查pos点是否需要描边
+  bool checkIsMakeOutline(vec2 pos){
+    //alpha检测值
+    float alpha = 0.03;
+    // 描边的宽度
+    float outlineWidth = 0.01;
+    vec4 color = texture2D(texture, pos);
+    if(color.a <= alpha || outlineWidth == 0.0)return false;
+ 
+    //检测当前点周围的8个点的alpha值
+    color = texture2D(texture, pos + vec2(0, outlineWidth));
+    if(color.a <= alpha)return true;
+    color = texture2D(texture, pos + vec2(outlineWidth, outlineWidth));
+    if(color.a <= alpha)return true;
+    color = texture2D(texture, pos + vec2(outlineWidth, 0));
+    if(color.a <= alpha)return true;
+    color = texture2D(texture, pos + vec2(outlineWidth, -outlineWidth));
+    if(color.a <= alpha)return true;
+    color = texture2D(texture, pos + vec2(0, -outlineWidth));
+    if(color.a <= alpha)return true;
+    color = texture2D(texture, pos + vec2(-outlineWidth, -outlineWidth));
+    if(color.a <= alpha)return true;
+    color = texture2D(texture, pos + vec2(-outlineWidth, 0));
+    if(color.a <= alpha)return true;
+    color = texture2D(texture, pos + vec2(-outlineWidth, outlineWidth));
+    if(color.a <= alpha)return true;
+    
+    //当前点已是纹理边缘
+    if(pos.x <= outlineWidth || pos.x >= 1.0 - outlineWidth)return true;
+    if(pos.y <= outlineWidth || pos.y >= 1.0 - outlineWidth)return true;
+ 
+    return false;
+  }
+
+void main()
+{
+    // vec2 onePixel = vec2(1.0 / iResolution.x, 1.0 / iResolution.y);
+
+    // vec4 color = texture2D(texture, uv0.xy);
+    // vec4 colorRight = texture2D(texture, uv0.xy + vec2(0,onePixel.t));
+    // vec4 colorBottom = texture2D(texture, uv0.xy + vec2(onePixel.s,0));
+
+    // color.r = 3.0* sqrt( (color.r - colorRight.r) * (color.r - colorRight.r) + (color.r - colorBottom.r) * (color.r - colorBottom.r) );
+    // color.g = 3.0* sqrt( (color.g - colorRight.g) * (color.g - colorRight.g) + (color.g - colorBottom.g) * (color.g - colorBottom.g) );
+    // color.b = 3.0* sqrt( (color.b - colorRight.b) * (color.b - colorRight.b) + (color.b - colorBottom.b) * (color.b - colorBottom.b) );
+
+    // color.r >1.0 ? 1.0 : color.r;
+    // color.g >1.0 ? 1.0 : color.g;
+    // color.b >1.0 ? 1.0 : color.b;
+    // gl_FragColor = vec4(color.rgb, 1);
+    vec4 o = vec4(1, 1, 1, 1);
+
+    o *= texture2D(texture, uv0);
+
+    o*= icolor0;
+
+    // o.a *= texture2D(texture, uv0 + vec2(0, 0.5)).a;
+
+    if (checkIsMakeOutline(uv0)){
+      o = vec4(0,0,0,0.8);
+    }
+
+
+    gl_FragColor = o;
+}
+}

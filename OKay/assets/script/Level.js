@@ -17,6 +17,10 @@ cc.Class({
         blackSound:{
             type:cc.AudioClip,
             default:null
+        },
+        lineSound:{
+            type:cc.AudioClip,
+            default:null
         }
         
     },
@@ -25,6 +29,10 @@ cc.Class({
 
     onLoad () {
         window.Level = this;
+    },
+
+    init:function(bgNodeControll){
+        this.bgNodeControll = bgNodeControll;
     },
 
     /*
@@ -82,20 +90,45 @@ cc.Class({
     },
 
     onCollision(tag,node){
-    
+
         this.curNum++;
+
+        if (tag == 6){
+            this.playLineEffect(tag,node)
+        }else {
+            this.playBlockEffect(tag,node);
+        }
+
+    },
+
+    playLineEffect:function(tag,node){
+        // 播放动画
+        var ani = node.getComponent(cc.Animation);
+        ani.play("line")
+        cc.audioEngine.play(this.lineSound,false,1);
+    },
+
+    playBlockEffect:function(tag,node){
+
+         // 播放音效
+         this.playSound();
+
+        // 创建背景
         node.active = false;
-        var bg  = cc.instantiate(this.blockBgPrefab);
+        var bg  = this.bgNodeControll.createBgNode(node.parent)//cc.instantiate(this.blockBgPrefab);
+
+        // 更换背景资源
         var bgSpr = bg.getComponent(cc.Sprite);
         bgSpr.spriteFrame = this.blockBgRes[tag];
 
-        bg.parent = node.parent;
+        // 处理背景的位置信息等
         bg.position = node.position;
         bg.isBg = true;
         bg.angle = node.angle
         bg.scaleX = node.scaleX;
         bg.scaleY = node.scaleY;
-      
+        bg.opacity = 255
+
 
 
         // 动作处理
@@ -103,15 +136,17 @@ cc.Class({
         var fade = cc.fadeOut(0.5);
         var spawn = cc.spawn(scale,fade);
         var func = cc.callFunc(function(){
-            bg.removeFromParent();
-        }.bind(bg))
+            // bg.removeFromParent();
+            this.bgNodeControll.onDestroyBgNode(bg);
+        }.bind(this))
 
         bg.runAction(cc.sequence(spawn,func));
-
-        this.playSound();
     },
 
     onCollisionBlack:function(tag,node){
+        var scaleBig = cc.scaleBy(0.1,1.1);
+        var scaleSmall = cc.scaleBy(0.1,0.909)
+        node.runAction(cc.sequence(scaleBig,scaleSmall))
         cc.audioEngine.play(this.blackSound,false,1);
     },
 
