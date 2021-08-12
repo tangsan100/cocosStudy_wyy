@@ -85,13 +85,17 @@ cc.Class({
         this.childNode.children.forEach(node => {
             if (!node.isBg){
                 node.active = true;
+                node.isHit = false;
             }
         });
     },
 
     onCollision(tag,node){
-
-        this.curNum++;
+        if (!node.isHit){
+            this.curNum++;
+            node.isHit = true;
+        }
+            
 
         if (tag == 6){
             this.playLineEffect(tag,node)
@@ -144,6 +148,17 @@ cc.Class({
     },
 
     onCollisionBlack:function(tag,node){
+
+        if (!node.oldScaleX){
+            node.oldScaleX = node.scaleX;
+            node.oldScaleY = node.scaleY;
+        }
+
+        node.scaleX = node.oldScaleX;
+        node.scaleY = node.oldScaleY
+
+        node.stopAllActions();
+
         var scaleBig = cc.scaleBy(0.1,1.1);
         var scaleSmall = cc.scaleBy(0.1,0.909)
         node.runAction(cc.sequence(scaleBig,scaleSmall))
