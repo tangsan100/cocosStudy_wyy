@@ -21,6 +21,9 @@ cc.Class({
 
        // 小球
        hero:Hero,
+
+       // 热更新
+       hotUpdatePanel:cc.Prefab
     },
 
 
@@ -35,6 +38,12 @@ cc.Class({
 
         this.hero.init(this.pointNode)
         this.LevelMgr.init(this.pointNode)
+
+        var hot = cc.instantiate(this.hotUpdatePanel);
+
+        if (hot){
+            hot.parent = this.node;
+        }
 
         
     },
