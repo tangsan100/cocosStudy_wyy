@@ -23,13 +23,18 @@ cc.Class({
        hero:Hero,
 
        // 热更新
-       hotUpdatePanel:cc.Prefab
+       hotUpdatePanel:cc.Prefab,
+
+       // 提示框
+       resetNode:cc.Node,
     },
 
 
     onLoad () {
 
         window.Game = this;
+
+        this.resetNode.active = false;
 
         // 开启物理引擎
         cc.director.getPhysicsManager().enabled = true;
@@ -52,7 +57,16 @@ cc.Class({
         if (this.currentLevel < this.totalLevel){
             this.currentLevel ++;
             this.LevelMgr.setLevel(this.currentLevel);
+        }else {
+            this.resetNode.active = true;
         }
+    },
+
+    onBtnResetClick:function(event){
+        cc.log("reset click !!!")
+        this.resetNode.active = false;
+        this.currentLevel = 1;
+        this.LevelMgr.setLevel(this.currentLevel);
     },
 
     start () {

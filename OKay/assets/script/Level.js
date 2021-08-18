@@ -21,7 +21,10 @@ cc.Class({
         lineSound:{
             type:cc.AudioClip,
             default:null
-        }
+        },
+
+        showAni:cc.AnimationClip,
+        hideAni:cc.AnimationClip
         
     },
 
@@ -33,6 +36,16 @@ cc.Class({
 
     init:function(bgNodeControll){
         this.bgNodeControll = bgNodeControll;
+
+        // var levels = this.node.children;
+        // for (var i = 0; i < levels.length; ++i){
+        //     var levelChildren = levels[i].children;
+        //     levelChildren.forEach(node=>{
+        //         var ani = node.addComponent(cc.Animation);
+        //         ani.addClip(this.showAni,"show");
+        //         ani.addClip(this.hideAni,"hide");
+        //     })
+        // }
     },
 
     /*
@@ -40,9 +53,12 @@ cc.Class({
     * level 新的关卡编号
     */
     setLevel:function(level){
+       
+        
         this.currentLevel = level;
         this.childNode = this.node.getChildByName(''+level)
         this.childNode.active = true;
+        this.childNode.opacity = 255;
        
         var blockNum = this.childNode.children.length;
 
@@ -50,9 +66,11 @@ cc.Class({
             if (node.getComponent("Black")){
                 blockNum --;
             }
+            node.active = false;
         });
         this.blockNum = blockNum;
         this.curNum = 0;
+        this.reset();
 
     },
 
@@ -67,28 +85,63 @@ cc.Class({
 
     processEnd(){
         if (this.curNum >= this.blockNum){
-            // 通关
-            var levelAni = cc.instantiate(this.levelAni)
-            levelAni.getComponent("LevelAni").setLevel(this.currentLevel,this.currentLevel+1);
-            levelAni.parent = this.node;
-            this.childNode.active = false;
+            
+            var hide = cc.fadeOut(0.2);
+            var call = cc.callFunc(function(){
+                // 通关
+                var levelAni = cc.instantiate(this.levelAni)
+                levelAni.getComponent("LevelAni").setLevel(this.currentLevel,this.currentLevel+1);
+                levelAni.parent = this.node;
+                this.childNode.active = false;
+            }.bind(this))
+
+            this.childNode.runAction(cc.sequence(hide,call));
+
         }else {
             // 恢复原样
             this.reset();
         }
     },
 
+    isEnd:function(){
+
+        if (this.curNum >= this.blockNum){
+            var hadBlack = false;
+            this.childNode.children.forEach(node => {
+                if (node.getComponent("Black")){
+                    hadBlack = true;
+                }
+            });
+
+            return hadBlack;
+        }
+        
+        return false;
+    },
+
 
     // 恢复原样
     reset:function(){
         this.curNum = 0;
+        var d = 0.1;
         this.childNode.children.forEach(node => {
             if (!node.isBg){
-                node.active = true;
+                
                 node.isHit = false;
             }
+
+            if (node.active == false){
+                node.active = true;
+                node.opacity = 0;
+
+                var tm = cc.delayTime(d);
+                var fade = cc.fadeIn(0.2);
+                node.runAction(cc.sequence(tm,fade));    
+                d += 0.1;
+            }   
         });
     },
+
 
     onCollision(tag,node){
         if (!node.isHit){

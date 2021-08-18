@@ -3,7 +3,11 @@ cc.Class({
     extends: cc.Component,
 
     properties: {
-       speed:0
+       speed:0,
+       clickSound:{
+        type:cc.AudioClip,
+        default:null
+    },
     },
 
     onLoad () {
@@ -28,12 +32,18 @@ cc.Class({
     // 点击开始
     onTouchStart:function(Event){
         // TODO 1. 触点地方显示小球
+        if (this.isMove){
+            Level.processEnd()
+            this.pointController.resetAimPoints();
+        }
         this.isMove = false
         var pos = Event.getLocation();
         this.startPos = this.node.parent.convertToNodeSpaceAR(pos);
         this.node.position = this.startPos;
         this.rigidBody.linearVelocity = cc.v2(0,0)
         this.node.opacity = 255;
+
+        cc.audioEngine.play(this.clickSound,false,1);
         // this.node.active = true;
     },
 
@@ -47,6 +57,7 @@ cc.Class({
 
     // 取消
     onTouchCancel:function(Event){
+        this.opacity = 0;
         this.pointController.resetAimPoints();
     },
 
@@ -59,9 +70,11 @@ cc.Class({
         var disY = endPos.y - this.startPos.y;
 
         var dis = Math.sqrt(disX*disX + disY*disY);
+        cc.audioEngine.play(this.clickSound,false,1);
 
         // 距离不够，不做移动处理
         if (dis < 50) {
+            this.node.opacity = 0;
             this.pointController.resetAimPoints();
             return;
         }
@@ -114,11 +127,31 @@ cc.Class({
         
         var rect = this.node.getBoundingBoxToWorld();
         var size = cc.view.getVisibleSize()
-        if (rect.xMax > size.width || rect.yMax > size.height || rect.xMax < 0 || rect.yMax < 0){
-            // 移出了屏幕,判断是否过关
+
+        if (Level.isEnd() || rect.xMax > size.width || rect.yMax > size.height || rect.xMax < 0 || rect.yMax < 0){
+            this.processEnd();
+        }
+        // if (rect.xMax > size.width || rect.yMax > size.height || rect.xMax < 0 || rect.yMax < 0){
+        //     // 移出了屏幕,判断是否过关
+           
+        // }
+    },
+
+    processEnd:function(){
+        if (this.isEnding){
+            return ;
+        }
+
+        this.isEnding = true;
+
+        var tm = cc.delayTime(1.0);
+        var call = cc.callFunc(function(){
+            this.isEnding = false;
             Level.processEnd();
             this.isMove = false;
             this.node.opacity = 0
-        }
-    },
+        }.bind(this))
+        this.node.runAction(cc.sequence(tm,call))
+
+    }
 });
