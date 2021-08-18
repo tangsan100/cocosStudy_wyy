@@ -54,7 +54,7 @@ cc.Class({
     */
     setLevel:function(level){
        
-        
+        this.isEndingAct = false;
         this.currentLevel = level;
         this.childNode = this.node.getChildByName(''+level)
         this.childNode.active = true;
@@ -85,17 +85,11 @@ cc.Class({
 
     processEnd(){
         if (this.curNum >= this.blockNum){
-            
-            var hide = cc.fadeOut(0.2);
-            var call = cc.callFunc(function(){
-                // 通关
-                var levelAni = cc.instantiate(this.levelAni)
-                levelAni.getComponent("LevelAni").setLevel(this.currentLevel,this.currentLevel+1);
-                levelAni.parent = this.node;
-                this.childNode.active = false;
-            }.bind(this))
-
-            this.childNode.runAction(cc.sequence(hide,call));
+             // 通关
+             var levelAni = cc.instantiate(this.levelAni)
+             levelAni.getComponent("LevelAni").setLevel(this.currentLevel,this.currentLevel+1);
+             levelAni.parent = this.node;
+             this.childNode.active = false;
 
         }else {
             // 恢复原样
@@ -103,20 +97,20 @@ cc.Class({
         }
     },
 
-    isEnd:function(){
-
-        if (this.curNum >= this.blockNum){
-            var hadBlack = false;
-            this.childNode.children.forEach(node => {
-                if (node.getComponent("Black")){
-                    hadBlack = true;
-                }
-            });
-
-            return hadBlack;
+    endingBlack:function(){
+        if (this.isEndingAct){
+            return;
         }
-        
-        return false;
+        if (this.curNum >= this.blockNum){
+            this.isEndingAct = true;
+           var hide = cc.fadeOut(0.5);
+           var call = cc.callFunc(function(){
+               this.childNode.active = false;
+           }.bind(this))
+
+           this.childNode.runAction(cc.sequence(hide,call))
+        }
+    
     },
 
 

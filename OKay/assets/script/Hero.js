@@ -125,33 +125,21 @@ cc.Class({
                 this.pointController.createTailPoint(pos);
         }
         
+        
+        Level.endingBlack();
+
+        
         var rect = this.node.getBoundingBoxToWorld();
         var size = cc.view.getVisibleSize()
 
-        if (Level.isEnd() || rect.xMax > size.width || rect.yMax > size.height || rect.xMax < 0 || rect.yMax < 0){
-            this.processEnd();
-        }
-        // if (rect.xMax > size.width || rect.yMax > size.height || rect.xMax < 0 || rect.yMax < 0){
-        //     // 移出了屏幕,判断是否过关
-           
-        // }
-    },
-
-    processEnd:function(){
-        if (this.isEnding){
-            return ;
-        }
-
-        this.isEnding = true;
-
-        var tm = cc.delayTime(1.0);
-        var call = cc.callFunc(function(){
-            this.isEnding = false;
+        
+        
+        if (rect.xMax > size.width || rect.yMax > size.height || rect.xMax < 0 || rect.yMax < 0){
             Level.processEnd();
             this.isMove = false;
             this.node.opacity = 0
-        }.bind(this))
-        this.node.runAction(cc.sequence(tm,call))
+        }
 
-    }
+        
+    },
 });
