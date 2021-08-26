@@ -23,6 +23,7 @@ HDC hMem;
 HDC hDC;
 
 GT::Canvas* canvas = nullptr;
+DrawTest* drawTest = nullptr;
 
 // 此代码模块中包含的函数的前向声明:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -83,22 +84,32 @@ void render() {
 	// 清理缓冲区
 	canvas->clear();
 
-
-	DrawTest drawTest(canvas);
+	//drawTest->drawImage(100, 100);
 
 	// 画雪花点
-	//drawTest.drawSnowScreen(wWidth, wHeight);
+	//drawTest->drawSnowScreen(wWidth, wHeight);
 
 	//画直线
-	drawTest.drawLine();
+	//drawTest.drawLine();
 	// 画射线
-	drawTest.drawRay();
+	//drawTest.drawRay();
 	// 画三角形
-	drawTest.drawTriangle(GT::Point(400, 400), GT::Point(500, 420), GT::Point(450, 500));
+	//drawTest.drawTriangle(GT::Point(400, 400), GT::Point(500, 420), GT::Point(450, 500));
 	// 画平底三角形
-	drawTest.drawTriangleFlat(GT::Point(200, 200), GT::Point(400, 200), GT::Point(300, 150));
+	//drawTest.drawTriangleFlat(GT::Point(200, 200), GT::Point(400, 200), GT::Point(300, 150));
+
+	// 任意三角形
+	//drawTest.drawTriangleCommon(GT::Point(300,300,GT::RGBA(255,0,0)),
+	//	GT::Point(400, 10, GT::RGBA(0, 255, 0)),
+	//	GT::Point(350, 400, GT::RGBA(0, 0, 255)));
+
+	/*drawTest.drawTriangleCommon(GT::Point(0, 0, GT::RGBA(255, 0, 0)),
+		GT::Point(700, 100, GT::RGBA(0, 255, 0)),
+		GT::Point(200, 600, GT::RGBA(0, 0, 255)));*/
 
 	
+	//drawTest->testUV();
+	drawTest->testGTGL();
 
 	BitBlt(hDC, 0, 0, wWidth, wHeight, hMem, 0, 0, SRCCOPY);
 }
@@ -129,6 +140,8 @@ void createDC() {
 	memset(buffer, 0, wWidth*wHeight * 4);
 
 	canvas = new GT::Canvas(wWidth, wHeight, buffer);
+	drawTest = new DrawTest(canvas);
+	drawTest->loagImage("res/ha.jpg");
 
 	return ;
 }

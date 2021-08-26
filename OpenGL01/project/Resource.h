@@ -13,10 +13,7 @@
 #define IDI_SMALL				108
 #define IDC_PROJECT			109
 #define IDC_MYICON				2
-#define MIN(x,y)	(((x) < (y))? (x) : (y))
-#define MAX(x,y)	(((x) > (y))? (x) : (y))
-#define PI 3.141592654
-#define DEG2RAD(i) i/180.00*PI
+
 
 
 #ifndef IDC_STATIC
