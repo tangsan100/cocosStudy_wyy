@@ -109,7 +109,8 @@ void render() {
 
 	
 	//drawTest->testUV();
-	drawTest->testGTGL();
+	//drawTest->testGTGL();
+	drawTest->testRotate();
 
 	BitBlt(hDC, 0, 0, wWidth, wHeight, hMem, 0, 0, SRCCOPY);
 }

@@ -1,0 +1,9 @@
+﻿  DrawTest.cpp
+e:\study\more\opengl\project\project\drawtest.cpp(20): warning C4305: “=”: 从“double”到“float”截断
+e:\study\more\opengl\project\project\drawtest.cpp(72): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+e:\study\more\opengl\project\project\drawtest.cpp(73): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+e:\study\more\opengl\project\project\drawtest.cpp(75): warning C4244: “初始化”: 从“float”转换到“int”，可能丢失数据
+e:\study\more\opengl\project\project\drawtest.cpp(76): warning C4244: “初始化”: 从“float”转换到“int”，可能丢失数据
+e:\study\more\opengl\project\project\drawtest.cpp(79): warning C4244: “参数”: 从“int”转换到“float”，可能丢失数据
+e:\study\more\opengl\project\project\drawtest.cpp(123): warning C4305: “+=”: 从“double”到“float”截断
+  project.vcxproj -> E:\study\more\openGL\project\Debug\project.exe

@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include "Image.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
 DrawTest::DrawTest(Canvas* ca) :canvas(ca) {
 	Image* img = Image::loadImage("res/bg.jpg");
 
@@ -36,7 +41,7 @@ void DrawTest::drawImage(int x, int y) {
 
 
 void DrawTest::drawLine() {
-	canvas->brensenhamLine(Point(300, 300,RGBA(255,0,0)), Point(150, 20, RGBA(255, 0, 0)));
+	canvas->brensenhamLine(Point(300, 300,0,RGBA(255,0,0)), Point(150, 20,0, RGBA(255, 0, 0)));
 }
 
 void DrawTest::drawTriangle(Point pt1, Point pt2, Point pt3) {
@@ -53,7 +58,7 @@ void DrawTest::drawTriangleCommon(Point pt1, Point pt2, Point pt3) {
 
 void DrawTest::drawRay() {
 	// 画出一个烟花线
-	GT::Point pt1(150, 150,GT::RGBA(255,0,0));
+	GT::Point pt1(150, 150,0,GT::RGBA(255,0,0));
 	GT::RGBA color(rand() % 255, rand() % 255, rand() % 255);
 
 	// 圆弧半径100
@@ -71,7 +76,7 @@ void DrawTest::drawRay() {
 		int y = dy + pt1._y;
 
 
-		canvas->brensenhamLine(pt1, GT::Point(x, y,GT::RGBA(0,255,0,255)));
+		canvas->brensenhamLine(pt1, GT::Point(x, y,0,GT::RGBA(0,255,0,255)));
 	}
 }
 
@@ -98,15 +103,15 @@ void DrawTest::testUV() {
 	this->canvas->bindTexture(this->img);
 
 	Point pts1[3] = {
-		Point(0,0,RGBA(255,0,0),floatV2(0,0)),
-		Point(650,0,RGBA(255,0,0),floatV2(1,0)),
-		Point(650,420,RGBA(255,0,0),floatV2(1,1)),
+		Point(0,0,0,RGBA(255,0,0),floatV2(0,0)),
+		Point(650,0,0,RGBA(255,0,0),floatV2(1,0)),
+		Point(650,420,0,RGBA(255,0,0),floatV2(1,1)),
 	};
 
 	Point pts2[3] = {
-		Point(0,0,RGBA(255,0,0),floatV2(0,0)),
-		Point(0,420,RGBA(255,0,0),floatV2(0,1)),
-		Point(650,420,RGBA(255,0,0),floatV2(1,1)),
+		Point(0,0,0,RGBA(255,0,0),floatV2(0,0)),
+		Point(0,420,0,RGBA(255,0,0),floatV2(0,1)),
+		Point(650,420,0,RGBA(255,0,0),floatV2(1,1)),
 	};
 
 	for (int i=0;i<3;i++)
@@ -120,14 +125,15 @@ void DrawTest::testUV() {
 	this->canvas->drawTriangleCommon(pts2[0], pts2[1], pts2[2]);
 }
 
+// 测试自定义GL 的接口
 void DrawTest::testGTGL() {
 	Point pts1[6] = {
-		Point(0,0,RGBA(255,0,0),floatV2(0,0)),
-		Point(650,0,RGBA(255,0,0),floatV2(1,0)),
-		Point(650,420,RGBA(255,0,0),floatV2(1,1)),
-		Point(0,0,RGBA(255,0,0),floatV2(0,0)),
-		Point(0,420,RGBA(255,0,0),floatV2(0,1)),
-		Point(650,420,RGBA(255,0,0),floatV2(1,1))
+		Point(0,0,0,RGBA(255,0,0),floatV2(0,0)),
+		Point(650,0,0,RGBA(255,0,0),floatV2(1,0)),
+		Point(650,420,0,RGBA(255,0,0),floatV2(1,1)),
+		Point(0,0,0,RGBA(255,0,0),floatV2(0,0)),
+		Point(0,420,0,RGBA(255,0,0),floatV2(0,1)),
+		Point(650,420,0,RGBA(255,0,0),floatV2(1,1))
 	};
 
 	this->canvas->bindTexture(this->img);
@@ -137,4 +143,47 @@ void DrawTest::testGTGL() {
 	canvas->gtTexCoorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0].uv);
 	
 	canvas->gtDrawArray(GT_TRIANGLE, 0, 6);
+}
+
+void DrawTest::testRotate() {
+	Point pts1[6] = {
+		Point(0.0f,0.0f,0.0f,RGBA(255,0,0),floatV2(0,0)),
+		Point(400.0f,0.0f,0.0f,RGBA(255,0,0),floatV2(1,0)),
+		Point(400.0f,250.0f,0.0f,RGBA(255,0,0),floatV2(1,1)),
+		Point(0.0f,0.0f,0.0f,RGBA(255,0,0),floatV2(0,0)),
+		Point(0.0f,420.0f,0.0f,RGBA(255,0,0),floatV2(0,1)),
+		Point(650.0f,420.0f,0.0f,RGBA(255,0,0),floatV2(1,1))
+	};
+
+	this->canvas->bindTexture(this->img);
+	static float angle = 0.0f;
+
+	for (int i = 0; i < 6; i++)
+	{
+		// 三维坐标，另z=0， w=1 
+		glm::vec4 ptv4(pts1[i]._x, pts1[i]._y, pts1[i]._z, 1);
+		// 定义一个单位矩阵
+		glm::mat4 rMat(1.0f);
+		// 旋转角度
+		rMat = glm::rotate(rMat, glm::radians(angle), glm::vec3(1, 0, 0));
+
+		// 平移
+		glm::mat4 tMat(1.0f);
+		tMat = glm::translate(tMat, glm::vec3(100, 300, 0));
+
+		// 矩阵左乘旋转后的矩阵
+		ptv4 = tMat*rMat * ptv4;
+		pts1[i]._x = ptv4.x;
+		pts1[i]._y = ptv4.y;
+		pts1[i]._z = ptv4.z;
+
+	}
+
+	angle += 2;
+
+	canvas->gtVertexPointer(2, GT_FLOAT, sizeof(Point), (byte*)pts1);
+	canvas->gtColorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0]._color);
+	canvas->gtTexCoorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0].uv);
+
+	canvas->gtDrawArray(GT_TRIANGLE, 0, 3);
 }

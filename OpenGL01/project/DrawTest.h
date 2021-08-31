@@ -45,6 +45,9 @@ public:
 	// 测试gtGL 接口， 模拟封装openGL 接口测试
 	void testGTGL();
 
+
+	// test GL Rotate
+	void testRotate();
 	
 };
 

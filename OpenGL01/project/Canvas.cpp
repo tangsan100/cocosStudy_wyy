@@ -124,11 +124,7 @@ void GT::Canvas::brensenhamLine(Point pt1, Point pt2) {
 
 		this->drawPoint(x, y, color);
 
-		// 步进主坐标
-		if (xDir)
-			x += xStep;
-		else
-			y += yStep;
+		
 		
 
 
@@ -140,9 +136,18 @@ void GT::Canvas::brensenhamLine(Point pt1, Point pt2) {
 				x += xStep;
 			
 		}
+		/*else if (p == 0) {
+
+		}*/
 		else {
 			p += 2 * dy;
 		}
+
+		// 步进主坐标
+		if (xDir)
+			x += xStep;
+		else
+			y += yStep;
 
 		
 	}
@@ -227,8 +232,8 @@ void GT::Canvas::drawTriangleFlat(Point flat1, Point flat2, Point pt) {
 
 	// y 方向步进
 	for (int y = minY; y < maxY; ++y) {
-		int x1 = (k2 == 0)?k2:((y - b2) / k2);
-		int x2 = (k1 == 0)?pt._x:((y - b1) / k1);
+		float x1 = (k2 == 0)? pt._x :((y - b2) / k2);
+		float x2 = (k1 == 0)?pt._x:((y - b1) / k1);
 
 		x1 = x1 < 0 ? 0 : x1;
 		x1 = x1 > wWidth ? wWidth - 1 : x1;
@@ -243,7 +248,9 @@ void GT::Canvas::drawTriangleFlat(Point flat1, Point flat2, Point pt) {
 		floatV2 uv1 = this->lerpUV(uvStart1, uvEnd1, s);
 		floatV2 uv2 = this->lerpUV(uvStart2, uvEnd2, s);
 
-		this->brensenhamLine(Point(x1, y,c1,uv1), Point(x2, y,c2,uv2));
+		float z = flat1._z;
+
+		this->brensenhamLine(Point(x1, y,z,c1,uv1), Point(x2, y,z,c2,uv2));
 	}
 }
 
@@ -326,8 +333,10 @@ void GT::Canvas::drawTriangleCommon(Point pt1, Point pt2, Point pt3) {
 	// 计算UV 坐标
 	floatV2 uv = this->lerpUV(pMin.uv, pMax.uv, scale);
 
-	this->drawTriangleFlat(pMid, Point(x, pMid._y,color, uv), pMax);
-	this->drawTriangleFlat(pMid, Point(x, pMid._y,color, uv), pMin);
+	float z = pt1._z;
+
+	this->drawTriangleFlat(pMid, Point(x, pMid._y,z,color, uv), pMax);
+	this->drawTriangleFlat(pMid, Point(x, pMid._y,z,color, uv), pMin);
 	
 }
 
@@ -450,13 +459,13 @@ void GT::Canvas::gtDrawArray(DRAW_MODE mode, int first, int count) {
 		{
 			
 			// 取pt0坐标点
-			int* verTexPoint = (int*)vertexData;
+			float* verTexPoint = (float*)vertexData;
 			pt0._x = verTexPoint[0];
 			pt0._y = verTexPoint[1];
 			vertexData += statement.vertexData.stride;
 
 			// 取pt1坐标点
-			verTexPoint = (int*)vertexData;
+			verTexPoint = (float*)vertexData;
 			pt1._x = verTexPoint[0];
 			pt1._y = verTexPoint[1];
 			vertexData += statement.vertexData.stride;
@@ -487,20 +496,20 @@ void GT::Canvas::gtDrawArray(DRAW_MODE mode, int first, int count) {
 		for (int i = 0; i < count; ++i)
 		{
 			// 取pt0坐标点
-			int* verTexPoint = (int*)vertexData;
+			float* verTexPoint = (float*)vertexData;
 			pt0._x = verTexPoint[0];
 			pt0._y = verTexPoint[1];
 			vertexData += statement.vertexData.stride;
 
 			// 取pt1坐标点
-			verTexPoint = (int*)vertexData;
+			verTexPoint = (float*)vertexData;
 			pt1._x = verTexPoint[0];
 			pt1._y = verTexPoint[1];
 			vertexData += statement.vertexData.stride;
 
 
 			// 取pt2坐标点
-			verTexPoint = (int*)vertexData;
+			verTexPoint = (float*)vertexData;
 			pt2._x = verTexPoint[0];
 			pt2._y = verTexPoint[1];
 			vertexData += statement.vertexData.stride;

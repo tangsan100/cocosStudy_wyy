@@ -59,12 +59,14 @@ namespace GT{
 
 
 	struct Point {
-		int _x;		// x 坐标
-		int _y;		// y 坐标
+		float _x;		// x 坐标
+		float _y;		// y 坐标
+		float _z;
 		RGBA _color; // 颜色值
 		floatV2 uv;  // uv 坐标
 
-		Point(int x = 0, int y = 0, RGBA color = RGBA(255, 255, 255, 255),floatV2 uv =floatV2(0,0)) :_x(x), _y(y), _color(color),uv(uv) {
+		Point(float x = 0, float y = 0,float z=0, RGBA color = RGBA(255, 255, 255, 255),floatV2 uv =floatV2(0,0)) :
+			_x(x), _y(y),_z(z), _color(color),uv(uv) {
 
 		}
 	};
