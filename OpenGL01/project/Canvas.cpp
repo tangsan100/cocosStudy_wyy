@@ -13,21 +13,37 @@ GT::Canvas::Canvas(int width, int height, void* buffer){
 	wWidth = width;
 	wHeight = height;
 	this->buffer = (RGBA*)buffer;
+	zBuffer = new float[wWidth*wHeight];
+	
 	
 }
 
+GT::Canvas::~Canvas() {
+	delete[] zBuffer;
+}
 
-void GT::Canvas::drawPoint( int x, int y, RGBA rgba) {
 
-	if ((y*wWidth+x) >= wWidth*wHeight)
+void GT::Canvas::drawPoint(Point pt) {
+
+	if ((pt._y*wWidth+pt._x) >= wWidth*wHeight)
 	{
 		return;
 	}
-	buffer[y*wWidth + x] = rgba;
+	int idx = pt._y*wWidth + pt._x;
+
+	if (pt._z > zBuffer[idx] )
+	{
+		return;
+	}
+
+	zBuffer[idx] = pt._z;
+
+	buffer[idx] = pt._color;
 }
 
 void GT::Canvas::clear() {
 	memset(buffer, 0, wWidth*wHeight * sizeof(RGBA));
+	memset(zBuffer, 255, sizeof(float)*wWidth*wHeight);
 }
 
 RGBA GT::Canvas::getPointColor(int x, int y) {
@@ -55,6 +71,10 @@ floatV2 GT::Canvas::lerpUV(floatV2 uv1, floatV2 uv2, float scale) {
 	uv.y = uv1.y + (uv2.y - uv1.y)*scale;
 
 	return uv;
+}
+
+float GT::Canvas::zLerp(float z1, float z2, float scale) {
+	return z1 + (z2 - z1)*scale;
 }
 
 
@@ -122,7 +142,8 @@ void GT::Canvas::brensenhamLine(Point pt1, Point pt2) {
 			color = this->getScalingColor(pt1._color, pt2._color, scale);
 		}
 
-		this->drawPoint(x, y, color);
+		float z = this->zLerp(pt1._z, pt2._z, scale);
+		this->drawPoint(Point(x, y,z, color));
 
 		
 		
@@ -182,7 +203,7 @@ void GT::Canvas::drawTriangle(Point pt1, Point pt2, Point pt3) {
 			int judge3 = (y - k3 * x - b3)*(pt3._y - k3 * pt3._x - b3);
 
 			if (judge1 >= 0 && judge2 >= 0 && judge3 >= 0) {
-				this->drawPoint(x, y, RGBA(255, 30, 0));
+				this->drawPoint(Point(x, y,0, RGBA(255, 30, 0)));
 			}
 		}
 	}
@@ -225,6 +246,11 @@ void GT::Canvas::drawTriangleFlat(Point flat1, Point flat2, Point pt) {
 	RGBA colorStart2 = flat2._y < pt._y ? flat2._color : pt._color;
 	RGBA colorEnd2 = flat2._y < pt._y ? pt._color : flat2._color;
 
+	float zStart1 = flat1._y < pt._y ? flat1._z : pt._z;
+	float zEnd1 = flat1._y < pt._y ? pt._z : flat1._z;
+	float zStart2 = flat2._y < pt._y ? flat2._z : pt._z;
+	float zEnd2 = flat2._y < pt._y ? pt._z : flat2._z;
+
 	floatV2 uvStart1 = flat1._y < pt._y ? flat1.uv : pt.uv;
 	floatV2 uvEnd1 = flat1._y < pt._y ? pt.uv : flat1.uv;
 	floatV2 uvStart2 = flat2._y < pt._y ? flat2.uv : pt.uv;
@@ -248,9 +274,10 @@ void GT::Canvas::drawTriangleFlat(Point flat1, Point flat2, Point pt) {
 		floatV2 uv1 = this->lerpUV(uvStart1, uvEnd1, s);
 		floatV2 uv2 = this->lerpUV(uvStart2, uvEnd2, s);
 
-		float z = flat1._z;
+		float z1 = this->zLerp(zStart1, zEnd1, s);
+		float z2 = this->zLerp(zStart2, zEnd2, s);
 
-		this->brensenhamLine(Point(x1, y,z,c1,uv1), Point(x2, y,z,c2,uv2));
+		this->brensenhamLine(Point(x1, y,z1,c1,uv1), Point(x2, y,z2,c2,uv2));
 	}
 }
 
@@ -333,7 +360,7 @@ void GT::Canvas::drawTriangleCommon(Point pt1, Point pt2, Point pt3) {
 	// 计算UV 坐标
 	floatV2 uv = this->lerpUV(pMin.uv, pMax.uv, scale);
 
-	float z = pt1._z;
+	float z = this->zLerp(pMin._z, pMax._z, scale);
 
 	this->drawTriangleFlat(pMid, Point(x, pMid._y,z,color, uv), pMax);
 	this->drawTriangleFlat(pMid, Point(x, pMid._y,z,color, uv), pMin);
@@ -400,10 +427,10 @@ void GT::Canvas::drawImage(int x, int y, Image* img) {
 				// alpha 混合
 				RGBA bgColor = this->getPointColor(x+u, y+v);
 				color = getScalingColor(bgColor, color, float(color.m_a) / bgColor.m_a*img->getAlpha());
-				drawPoint(x + u, y + v, color);
+				//drawPoint(x + u, y + v, color);
 			}
 			else {
-				drawPoint(x + u, y + v, color);
+				//drawPoint(x + u, y + v, color);
 			}
 			
 		}
@@ -462,12 +489,14 @@ void GT::Canvas::gtDrawArray(DRAW_MODE mode, int first, int count) {
 			float* verTexPoint = (float*)vertexData;
 			pt0._x = verTexPoint[0];
 			pt0._y = verTexPoint[1];
+			pt0._z = verTexPoint[2];
 			vertexData += statement.vertexData.stride;
 
 			// 取pt1坐标点
 			verTexPoint = (float*)vertexData;
 			pt1._x = verTexPoint[0];
 			pt1._y = verTexPoint[1];
+			pt1._z = verTexPoint[2];
 			vertexData += statement.vertexData.stride;
 
 			// 取pt0 的颜色值
@@ -499,12 +528,14 @@ void GT::Canvas::gtDrawArray(DRAW_MODE mode, int first, int count) {
 			float* verTexPoint = (float*)vertexData;
 			pt0._x = verTexPoint[0];
 			pt0._y = verTexPoint[1];
+			pt0._z = verTexPoint[2];
 			vertexData += statement.vertexData.stride;
 
 			// 取pt1坐标点
 			verTexPoint = (float*)vertexData;
 			pt1._x = verTexPoint[0];
 			pt1._y = verTexPoint[1];
+			pt1._z = verTexPoint[2];
 			vertexData += statement.vertexData.stride;
 
 
@@ -512,6 +543,7 @@ void GT::Canvas::gtDrawArray(DRAW_MODE mode, int first, int count) {
 			verTexPoint = (float*)vertexData;
 			pt2._x = verTexPoint[0];
 			pt2._y = verTexPoint[1];
+			pt2._z = verTexPoint[2];
 			vertexData += statement.vertexData.stride;
 
 			// 取pt0 的颜色值

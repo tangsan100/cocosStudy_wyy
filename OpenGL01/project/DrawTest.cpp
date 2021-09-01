@@ -86,7 +86,7 @@ void DrawTest::drawSnowScreen(int wWidth, int wHeight) {
 	for (int x = 0; x < wWidth; ++x) {
 		for (int y = 0; y < wHeight; ++y) {
 			GT::RGBA color(rand() % 255, rand() % 255, rand() % 255);
-			canvas->drawPoint(x, y, color);
+			canvas->drawPoint(Point(x, y, 0, color));
 		}
 	}
 }
@@ -169,13 +169,82 @@ void DrawTest::testRotate() {
 
 		// 平移
 		glm::mat4 tMat(1.0f);
-		tMat = glm::translate(tMat, glm::vec3(100, 300, 0));
+		tMat = glm::translate(tMat, glm::vec3(100, 0, 0));
+
+		glm::mat4 vMat(1.0f);
+		vMat = glm::lookAt(glm::vec3(200, 0, 200), glm::vec3(200, 0, 0), glm::vec3(0, 1, 0));
 
 		// 矩阵左乘旋转后的矩阵
 		ptv4 = tMat*rMat * ptv4;
+		ptv4 = vMat * ptv4;
 		pts1[i]._x = ptv4.x;
 		pts1[i]._y = ptv4.y;
 		pts1[i]._z = ptv4.z;
+
+	}
+
+	//angle += 2;
+
+	canvas->gtVertexPointer(2, GT_FLOAT, sizeof(Point), (byte*)pts1);
+	canvas->gtColorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0]._color);
+	canvas->gtTexCoorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0].uv);
+
+	canvas->gtDrawArray(GT_TRIANGLE, 0, 3);
+}
+
+void DrawTest::test3D() {
+	Point pts1[6] = {
+		Point(0.0f,0.0f,0.0f,RGBA(255,0,0),floatV2(0,0)),
+		Point(300.0f,0.0f,0.0f,RGBA(255,0,0),floatV2(1,0)),
+		Point(300.0f,300.0f,0.0f,RGBA(255,0,0),floatV2(1,1)),
+
+		Point(300.0f,0.0f,0.0f,RGBA(255,0,0),floatV2(0,0)),
+		Point(300.0f,300.0f,0.0f,RGBA(0,255,0),floatV2(0,0)),
+		Point(300.0f,0.0f,-500.0f,RGBA(0,0,255),floatV2(0,0)),
+
+	};
+
+	this->canvas->bindTexture(this->img);
+	static float angle = 0.0f;
+
+	float width = canvas->getWidth();
+	float height = canvas->getHeight();
+
+	for (int i = 0; i < 6; i++)
+	{
+		// 三维坐标，另z=0， w=1 
+		glm::vec4 ptv4(pts1[i]._x, pts1[i]._y, pts1[i]._z, 1);
+
+
+		//旋转
+		glm::mat4 rMat(1.0f);
+		rMat = glm::rotate(rMat, glm::radians(angle), glm::vec3(0, 1, 0));
+
+		// 平移
+		glm::mat4 tMat(1.0f);
+		tMat = glm::translate(tMat, glm::vec3(-300, 0, 0));
+
+		// v变换
+		glm::mat4 vMat(1.0f);
+		vMat = glm::lookAt(glm::vec3(0,0,1000), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+		
+
+		// p 透视投影变换
+		glm::mat4 pMat(1.0f);
+		// 参数1： 视张角
+		// 参数2：宽高比
+		// 参数3：近平面距离
+		// 参数4：远平面距离
+		pMat = glm::perspective(glm::radians(60.0f), width / height, 1.0f, 1000.0f);
+		//ptv4 = pMat * ptv4;
+		ptv4 = pMat  *vMat * rMat * tMat * ptv4;
+
+		// 除与 w 后，变成了NDC 坐标
+		pts1[i]._x = (ptv4.x / ptv4.w + 1)*width / 2;
+		pts1[i]._y = (ptv4.y / ptv4.w + 1)*height / 2;
+		pts1[i]._z = ptv4.z / ptv4.w;
+
 
 	}
 
@@ -185,5 +254,5 @@ void DrawTest::testRotate() {
 	canvas->gtColorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0]._color);
 	canvas->gtTexCoorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0].uv);
 
-	canvas->gtDrawArray(GT_TRIANGLE, 0, 3);
+	canvas->gtDrawArray(GT_TRIANGLE, 0, 6);
 }

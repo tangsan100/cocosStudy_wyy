@@ -55,6 +55,7 @@ namespace GT {
 		int wWidth;
 		int wHeight;
 		RGBA* buffer;
+		float* zBuffer;
 
 		StateMent statement;
 		/*bool isBindTexture;
@@ -66,8 +67,9 @@ namespace GT {
 		int getHeight() { return wHeight; }
 
 		Canvas(int width, int height, void* buffer);
+		~Canvas();
 
-		void drawPoint(int x,int y, RGBA rgb);
+		void drawPoint(Point pt);
 
 		void clear();
 
@@ -78,6 +80,7 @@ namespace GT {
 
 		// 计算UV值
 		floatV2 lerpUV(floatV2 uv1, floatV2 uv2, float scale);
+		float zLerp(float z1, float z2, float scale);
 
 		// 画三角形
 		void drawTriangle(Point pt1, Point pt2, Point pt3);

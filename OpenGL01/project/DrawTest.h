@@ -48,6 +48,9 @@ public:
 
 	// test GL Rotate
 	void testRotate();
+
+	// 3D±ä»»
+	void test3D();
 	
 };
 
