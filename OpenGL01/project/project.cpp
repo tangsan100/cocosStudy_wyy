@@ -111,7 +111,8 @@ void render() {
 	//drawTest->testUV();
 	//drawTest->testGTGL();
 	//drawTest->testRotate();
-	drawTest->test3D();
+	//drawTest->test3D();
+	drawTest->test3D1();
 
 	BitBlt(hDC, 0, 0, wWidth, wHeight, hMem, 0, 0, SRCCOPY);
 }

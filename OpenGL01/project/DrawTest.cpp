@@ -185,11 +185,7 @@ void DrawTest::testRotate() {
 
 	//angle += 2;
 
-	canvas->gtVertexPointer(2, GT_FLOAT, sizeof(Point), (byte*)pts1);
-	canvas->gtColorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0]._color);
-	canvas->gtTexCoorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0].uv);
-
-	canvas->gtDrawArray(GT_TRIANGLE, 0, 3);
+	draw(GT_TRIANGLE, pts1, 3);
 }
 
 void DrawTest::test3D() {
@@ -210,25 +206,28 @@ void DrawTest::test3D() {
 	float width = canvas->getWidth();
 	float height = canvas->getHeight();
 
-	for (int i = 0; i < 6; i++)
-	{
-		// 三维坐标，另z=0， w=1 
-		glm::vec4 ptv4(pts1[i]._x, pts1[i]._y, pts1[i]._z, 1);
-
 
 		//旋转
 		glm::mat4 rMat(1.0f);
 		rMat = glm::rotate(rMat, glm::radians(angle), glm::vec3(0, 1, 0));
+		rMat = glm::rotate(rMat, glm::radians(50.0f), glm::vec3(1, 0, 0));
 
 		// 平移
 		glm::mat4 tMat(1.0f);
 		tMat = glm::translate(tMat, glm::vec3(-300, 0, 0));
 
+
+		canvas->gtMatrixMode(GT_MATRIX_MODEL);
+		canvas->gtLoadIdentity();
+		canvas->gtMultiMatrix(tMat);
+		canvas->gtMultiMatrix(rMat);
+
 		// v变换
 		glm::mat4 vMat(1.0f);
 		vMat = glm::lookAt(glm::vec3(0,0,1000), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-
-		
+		canvas->gtMatrixMode(GT_MATRIX_VIEW);
+		canvas->gtLoadIdentity();
+		canvas->gtLoadMatrix(vMat);
 
 		// p 透视投影变换
 		glm::mat4 pMat(1.0f);
@@ -237,22 +236,96 @@ void DrawTest::test3D() {
 		// 参数3：近平面距离
 		// 参数4：远平面距离
 		pMat = glm::perspective(glm::radians(60.0f), width / height, 1.0f, 1000.0f);
-		//ptv4 = pMat * ptv4;
-		ptv4 = pMat  *vMat * rMat * tMat * ptv4;
+		
 
-		// 除与 w 后，变成了NDC 坐标
-		pts1[i]._x = (ptv4.x / ptv4.w + 1)*width / 2;
-		pts1[i]._y = (ptv4.y / ptv4.w + 1)*height / 2;
-		pts1[i]._z = ptv4.z / ptv4.w;
+		canvas->gtMatrixMode(GT_MATRIX_PROJECTION);
+		canvas->gtLoadIdentity();
+		canvas->gtLoadMatrix(pMat);
 
-
-	}
 
 	angle += 2;
 
-	canvas->gtVertexPointer(2, GT_FLOAT, sizeof(Point), (byte*)pts1);
-	canvas->gtColorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0]._color);
-	canvas->gtTexCoorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&pts1[0].uv);
 
-	canvas->gtDrawArray(GT_TRIANGLE, 0, 6);
+	draw(GT_TRIANGLE, pts1, 6);
+
+}
+
+void DrawTest::test3D1() {
+	Point pts0[3] = {
+		Point(0.0f,0.0f,0.0f,RGBA(255,0,0),floatV2(0,0)),
+		Point(300.0f,0.0f,0.0f,RGBA(255,0,0),floatV2(1,0)),
+		Point(300.0f,300.0f,0.0f,RGBA(255,0,0),floatV2(1,1)),
+
+	};
+
+	Point pts1[3] = {
+		Point(300.0f,0.0f,0.0f,RGBA(255,0,0),floatV2(0,0)),
+		Point(300.0f,300.0f,0.0f,RGBA(0,255,0),floatV2(0,0)),
+		Point(600.0f,0.0f,0.0f,RGBA(0,0,255),floatV2(0,0)),
+	};
+
+	this->canvas->bindTexture(this->img);
+	static float angle = 0.0f;
+	static float xStep = 0.0f;
+
+	float width = canvas->getWidth();
+	float height = canvas->getHeight();
+
+	// 模型变换
+
+	canvas->gtMatrixMode(GT_MATRIX_MODEL);
+	canvas->gtLoadIdentity();
+
+	glm::mat4 sumMat(1.0f);
+	sumMat = glm::translate(sumMat, glm::vec3(xStep,0,0));
+	canvas->gtMultiMatrix(sumMat);
+	xStep += 2;
+
+
+	// 保存数据
+	canvas->pushMatrix();
+	canvas->gtLoadIdentity();
+
+	// 三角形2的平移
+	glm::mat4 tMat(1.0f);
+	tMat = glm::translate(tMat, glm::vec3(-300, 0, 0));
+	canvas->gtMultiMatrix(tMat);
+
+	//  三角形2的旋转
+	glm::mat4 rMat(1.0f);
+	rMat = glm::rotate(rMat, glm::radians(angle), glm::vec3(0, 1, 0));
+	canvas->gtMultiMatrix(rMat);
+	angle += 2;
+
+	// v 变换
+	canvas->gtMatrixMode(GT_MATRIX_VIEW);
+	canvas->gtLoadIdentity();
+	glm::mat4 vMat(1.0f);
+	vMat = glm::lookAt(glm::vec3(0, 0, 1000), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	canvas->gtLoadMatrix(vMat);
+
+	// p 变换
+	canvas->gtMatrixMode(GT_MATRIX_PROJECTION);
+	canvas->gtLoadIdentity();
+	glm::mat4 pMat(1.0f);
+	pMat = glm::perspective(glm::radians(60.0f), float(width) / height, 1.0f, 1000.0f);
+	canvas->gtLoadMatrix(pMat);
+
+	// 绘制三角形2
+	draw(GT_TRIANGLE, pts0, 3);
+
+	// 绘制三角形1
+	canvas->popMatrix();
+	draw(GT_TRIANGLE, pts1, 3);
+
+}
+
+void DrawTest::draw(DRAW_MODE drawMode, Point arr[], int count) {
+
+
+	canvas->gtVertexPointer(2, GT_FLOAT, sizeof(Point), (byte*)arr);
+	canvas->gtColorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&arr[0]._color);
+	canvas->gtTexCoorPointer(1, GT_FLOAT, sizeof(Point), (byte*)&arr[0].uv);
+
+	canvas->gtDrawArray(drawMode, 0, count);
 }

@@ -2,6 +2,10 @@
 #include <vector>
 #include "Common.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 class Image;
 
 namespace GT {
@@ -33,6 +37,13 @@ namespace GT {
 
 
 	};
+
+	enum GT_MATRIX_MODE{
+		GT_MATRIX_VIEW = 0,
+		GT_MATRIX_PROJECTION,
+		GT_MATRIX_MODEL
+	};
+
 	struct StateMent
 	{
 		const Image* texture;
@@ -42,9 +53,19 @@ namespace GT {
 		DataElement colorData;	// 颜色数据
 		DataElement texCoorData;// 纹理数据
 
+
+		std::vector<glm::mat4>	matrixVec; // 矩阵栈
+		GT_MATRIX_MODE			matrixMode; // 模式
+		glm::mat4				modelMatrix; // 模型矩阵
+		glm::mat4				viewMatrix;	// v 变换矩阵
+		glm::mat4				projectionMatrix;	// p变换矩阵
 		StateMent() {
 			texture = nullptr;
 			isBindTexture = false;
+			matrixMode = GT_MATRIX_VIEW;
+			viewMatrix = glm::mat4(1.0f);
+			modelMatrix = glm::mat4(1.0f);
+			projectionMatrix = glm::mat4(1.0f);
 		}
 	};
 	
@@ -111,6 +132,25 @@ namespace GT {
 		void gtTexCoorPointer(int size, Data_Type type, int stride, byte* data);
 		// 开始绘制
 		void gtDrawArray(DRAW_MODE mode,int first,int count);
+
+		// 设置变模式 
+		void gtMatrixMode(GT_MATRIX_MODE mode);
+
+		// 赋值矩阵
+		void gtLoadMatrix(glm::mat4 matrix);
+		//	变成单位阵
+		void gtLoadIdentity();
+		// 左乘一个矩阵
+		void gtMultiMatrix(glm::mat4 matrix);
+
+		// 顶点变换
+		void gtVertexTransform(Point &pt);
+
+		// 矩阵压栈
+		void pushMatrix();
+
+		// 矩阵弹栈
+		void popMatrix();
 	};
 }
 

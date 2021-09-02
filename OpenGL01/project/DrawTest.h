@@ -51,6 +51,11 @@ public:
 
 	// 3D变换
 	void test3D();
+
+	// 3d 变换优化版
+	void test3D1();
+
+	void draw(DRAW_MODE drawMode, Point arr[], int count);
 	
 };
 

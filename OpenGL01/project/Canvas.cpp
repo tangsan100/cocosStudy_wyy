@@ -576,6 +576,10 @@ void GT::Canvas::gtDrawArray(DRAW_MODE mode, int first, int count) {
 			pt2.uv = uvData[0];
 			texCoorData += statement.texCoorData.stride;
 
+			gtVertexTransform(pt0);
+			gtVertexTransform(pt1);
+			gtVertexTransform(pt2);
+
 			this->drawTriangleCommon(pt0, pt1, pt2);
 		}
 	}
@@ -583,4 +587,98 @@ void GT::Canvas::gtDrawArray(DRAW_MODE mode, int first, int count) {
 	default:
 		break;
 	}
+}
+
+void GT::Canvas::gtMatrixMode(GT_MATRIX_MODE mode) {
+
+
+	if (mode != GT_MATRIX_VIEW && mode != GT_MATRIX_PROJECTION && mode != GT_MATRIX_MODEL) {
+		return;
+	}
+
+	statement.matrixMode = mode;
+
+}
+
+void GT::Canvas::gtLoadMatrix(glm::mat4 matrix) {
+	switch (statement.matrixMode)
+	{
+	case GT_MATRIX_VIEW:
+		statement.viewMatrix = matrix;
+		break;
+	case GT_MATRIX_PROJECTION:
+		statement.projectionMatrix = matrix;
+		break;
+	case GT_MATRIX_MODEL:
+		statement.modelMatrix = matrix;
+	default:
+		break;
+	}
+}
+
+//	变成单位阵
+void GT::Canvas::gtLoadIdentity() {
+	switch (statement.matrixMode)
+	{
+	case GT_MATRIX_VIEW:
+		statement.viewMatrix = glm::mat4(1.0f);
+		break;
+	case GT_MATRIX_PROJECTION:
+		statement.projectionMatrix = glm::mat4(1.0f);
+		break;
+	case GT_MATRIX_MODEL:
+		statement.modelMatrix = glm::mat4(1.0f);
+		break;
+	default:
+		break;
+	}
+}
+
+
+// 左乘一个矩阵
+void GT::Canvas::gtMultiMatrix(glm::mat4 matrix) {
+	switch (statement.matrixMode)
+	{
+	case GT_MATRIX_VIEW:
+		statement.viewMatrix = matrix * statement.viewMatrix;
+		break;
+	case GT_MATRIX_PROJECTION:
+		statement.projectionMatrix = matrix * statement.projectionMatrix;
+		break;
+	case GT_MATRIX_MODEL:
+		statement.modelMatrix = matrix * statement.modelMatrix;
+		break;
+	default:
+		break;
+	}
+}
+
+/*
+	顶点数据 mvp 变换
+*/
+void GT::Canvas::gtVertexTransform(Point &pt) {
+	glm::vec4 ptv4(pt._x, pt._y, pt._z, 1);
+
+	ptv4 = statement.projectionMatrix * statement.viewMatrix * statement.modelMatrix * ptv4;
+
+	pt._x = (ptv4.x / ptv4.w + 1)*float(wWidth) / 2;
+	pt._y = (ptv4.y / ptv4.w + 1)*float(wHeight) / 2;
+	pt._z = ptv4.z/ptv4.w;
+}
+
+
+// 矩阵压栈
+void GT::Canvas::pushMatrix() {
+	statement.matrixVec.push_back(statement.modelMatrix);
+}
+
+// 矩阵弹栈
+void GT::Canvas::popMatrix() {
+	if (statement.matrixVec.empty())
+	{
+		return;
+	}
+
+	statement.modelMatrix = statement.matrixVec.back();
+	statement.matrixVec.pop_back();
 }
