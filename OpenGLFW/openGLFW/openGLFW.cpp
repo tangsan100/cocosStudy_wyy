@@ -51,17 +51,14 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	// 初始化顶点
-	GLDraw* draw = new GLDraw;
+	GLDraw* draw = new GLDraw(800,600);
 	draw->init();
 
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
 
-		// 设置要清理画布的颜色
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		// 清理画布
-		glClear(GL_COLOR_BUFFER_BIT);
+		
 
 		// TODO rander
 		draw->rander();

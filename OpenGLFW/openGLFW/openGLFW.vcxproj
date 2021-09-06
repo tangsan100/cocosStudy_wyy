@@ -91,7 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\study\more\openGLFW\openGLFW\glad\include;E:\study\more\openGLFW\openGLFW\glfw2017\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\study\more\openGLFW\openGLFW\glad\include;E:\study\more\openGLFW\openGLFW\glfw2017\include;./;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -154,6 +154,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AImage.cpp" />
+    <ClCompile Include="Camara.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="GLGraw.cpp" />
     <ClCompile Include="openGLFW.cpp" />
@@ -164,9 +166,12 @@
     <None Include="vertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AImage.h" />
     <ClInclude Include="Base.h" />
+    <ClInclude Include="Camara.h" />
     <ClInclude Include="GLDraw.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -20,5 +20,7 @@ public:
 
 	void start();
 	void end();
+
+	void setMatrix(const std::string name, glm::mat4 matrix);
 };
 

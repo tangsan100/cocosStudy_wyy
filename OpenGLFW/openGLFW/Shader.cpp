@@ -112,3 +112,9 @@ void Shader::start() {
 void Shader::end() {
 	glUseProgram(0);
 }
+
+void Shader::setMatrix(const std::string name, glm::mat4 matrix) {
+	// 往shader 传值，把矩阵传入
+	glUniformMatrix4fv(glGetUniformLocation(this->shaderProgram, name.c_str()),
+		1, GL_FALSE, glm::value_ptr(matrix));
+}
