@@ -37,6 +37,8 @@
   <ItemGroup>
     <None Include="fragmentShader.glsl" />
     <None Include="vertexShader.glsl" />
+    <None Include="fSunShader.glsl" />
+    <None Include="vSunShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLDraw.h">

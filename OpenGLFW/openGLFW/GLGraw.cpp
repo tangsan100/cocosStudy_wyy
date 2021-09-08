@@ -2,21 +2,35 @@
 #include "Base.h"
 #include "Shader.h"
 #include "AImage.h"
+#include "Camara.h"
 
 GLDraw::GLDraw(int width,int height):width(width),height(height) {
-	shader = new Shader();
+	cam = new Camara();
+	cubeShader = new Shader();
+	sunShader = new Shader();
 	vMatrix = glm::mat4(1.0f);
 	pMatrix = glm::mat4(1.0f);
 }
 
 GLDraw::~GLDraw() {
-	delete shader;
+	delete cubeShader;
+	delete sunShader;
 }
 
 void GLDraw::init() {
-	initModel();
+	// 相机初始化
+	glm::vec3 eyes(0.0f, 0.0f, 3.0f);
+	glm::vec3 center(0.0f, 0.0f, 1.0f);
+	cam->lookAt(eyes, center-eyes , glm::vec3(0.0f, 1.0f, 0.0f));
+	cam->setSensitivity(0.1f);
+
+
+	VAO_cube = createModel();
+	VAO_sun = createModel();
 	initTexture();
-	shader->initShader("vertexShader.glsl", "fragmentShader.glsl");
+
+	cubeShader->initShader("vertexShader.glsl", "fragmentShader.glsl");
+	sunShader->initShader("vSunShader.glsl", "fSunShader.glsl");
 }
 
 void GLDraw::initTexture() {
@@ -36,7 +50,7 @@ void GLDraw::initTexture() {
 }
 
 
-void GLDraw::initModel() {
+uint GLDraw::createModel() {
 	/*float vertices[] = {
 		0.5f,0.5f,0.0f, 1.0f,0.0f,0.0f,	1.0f,1.0f,
 		0.5f,-0.5f,0.0f,  0.0f,1.0f,0.0f,	1.0f,0.0f,
@@ -44,49 +58,52 @@ void GLDraw::initModel() {
 		-0.5f,0.5f,0.0f,   0.0f,1.0f,0.0f,	0.0f,1.0f, 
 	};*/
 
+	uint VAO;
+	uint VBO;
+
 	float vertices[] = {
-		-0.5f,-0.5f,-0.5f,		0.0f,0.0f,
-		0.5f,-0.5f,-0.5f,		1.0f,0.0f,
-		0.5f,0.5f,-0.5f,		1.0f,1.0f,
-		0.5f,0.5f,-0.5f,		1.0f,1.0f,
-		-0.5f,0.5f,-0.5f,		1.0f,0.0f,
-		-0.5f,-0.5f,-0.5f,		0.0f,0.0f,
+		-0.5f, -0.5f, -0.5f,	0.0f,0.0f,   0.0f,  0.0f, -1.0f,
+		 0.5f, -0.5f, -0.5f,	1.0f,0.0f,	 0.0f,  0.0f, -1.0f,
+		 0.5f,	0.5f, -0.5f,	1.0f,1.0f,	 0.0f,  0.0f, -1.0f,
+		 0.5f,	0.5f, -0.5f,	1.0f,1.0f,	 0.0f,  0.0f, -1.0f,
+		-0.5f,	0.5f, -0.5f,	0.0f,1.0f,	 0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,	0.0f,0.0f,	 0.0f,  0.0f, -1.0f,
 
-		-0.5f,-0.5f,0.5f,		0.0f,0.0f,
-		0.5f,-0.5f,0.5f,		1.0f,0.0f,
-		0.5f,0.5f,0.5f,		1.0f,1.0f,
-		0.5f,0.5f,0.5f,		1.0f,1.0f,
-		-0.5f,0.5f,0.5f,		0.0f,1.0f,
-		-0.5f,-0.5f,0.5f,		0.0f,0.0f,
+		-0.5f, -0.5f,	0.5f,	0.0f,0.0f,	 0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f,	0.5f,	1.0f,0.0f,	 0.0f,  0.0f,  1.0f,
+		 0.5f,	0.5f,	0.5f,	1.0f,1.0f,	 0.0f,  0.0f,  1.0f,
+		 0.5f,	0.5f,	0.5f,	1.0f,1.0f,	 0.0f,  0.0f,  1.0f,
+		-0.5f,	0.5f,	0.5f,	0.0f,1.0f,	 0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,	0.5f,	0.0f,0.0f,	 0.0f,  0.0f,  1.0f,
 
-		-0.5f,0.5f,0.5f,		1.0f,0.0f,
-		-0.5f,0.5f,-0.5f,		1.0f,1.0f,
-		-0.5f,-0.5f,-0.5f,		0.0f,1.0f,
-		-0.5f,-0.5f,-0.5f,		0.0f,1.0f,
-		-0.5f,-0.5f,0.5f,		0.0f,0.0f,
-		-0.5f,0.5f,0.5f,		1.0f,0.0f,
+		-0.5f,	0.5f,	0.5f,	1.0f,0.0f,	-1.0f,  0.0f,  0.0f,
+		-0.5f,	0.5f,  -0.5f,	1.0f,1.0f,	-1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  -0.5f,	0.0f,1.0f,	-1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  -0.5f,	0.0f,1.0f,	-1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,	0.5f,	0.0f,0.0f,	-1.0f,  0.0f,  0.0f,
+		-0.5f,	0.5f,	0.5f,	1.0f,0.0f,	-1.0f,  0.0f,  0.0f,
 
 
-		0.5f,0.5f,0.5f,		1.0f,0.0f,
-		0.5f,0.5f,-0.5f,		1.0f,1.0f,
-		0.5f,-0.5f,-0.5f,		0.0f,1.0f,
-		0.5f,-0.5f,-0.5f,		0.0f,1.0f,
-		0.5f,-0.5f,0.5f,		0.0f,0.0f,
-		0.5f,0.5f,0.5f,		1.0f,0.0f,
+		0.5f,	0.5f,	0.5f,	1.0f,0.0f,	 1.0f,  0.0f, 0.0f,
+		0.5f,	0.5f,  -0.5f,	1.0f,1.0f,	 1.0f,  0.0f, 0.0f,
+		0.5f,  -0.5f,  -0.5f,	0.0f,1.0f,	 1.0f,  0.0f, 0.0f,
+		0.5f,  -0.5f,  -0.5f,	0.0f,1.0f,	 1.0f,  0.0f, 0.0f,
+		0.5f,  -0.5f,	0.5f,	0.0f,0.0f,	 1.0f,  0.0f, 0.0f,
+		0.5f,	0.5f,	0.5f,	1.0f,0.0f,	 1.0f,  0.0f, 0.0f,
 
-		-0.5f,-0.5f,-0.5f,		0.0f,1.0f,
-		0.5f,-0.5f,-0.5f,		1.0f,1.0f,
-		0.5f,-0.5f,0.5f,		1.0f,0.0f,
-		0.5f,-0.5f,0.5f,		1.0f,0.0f,
-		0.5f,-0.5f,-0.5f,		1.0f,1.0f,
-		-0.5f,-0.5f,-0.5f,		0.0f,1.0f,
+		-0.5f, -0.5f,  -0.5f,	0.0f,1.0f,	 0.0f, -1.0f, 0.0f,
+		 0.5f, -0.5f,  -0.5f,	1.0f,1.0f,	 0.0f, -1.0f, 0.0f,
+		 0.5f, -0.5f,	0.5f,	1.0f,0.0f,	 0.0f, -1.0f, 0.0f,
+		 0.5f, -0.5f,	0.5f,	1.0f,0.0f,	 0.0f, -1.0f, 0.0f,
+		-0.5f, -0.5f,   0.5f,	0.0f,0.0f,	 0.0f, -1.0f, 0.0f,
+		-0.5f, -0.5f,  -0.5f,	0.0f,1.0f,	 0.0f, -1.0f, 0.0f,
 
-		-0.5f,0.5f,-0.5f,		0.0f,1.0f,
-		0.5f,0.5f,-0.5f,		1.0f,1.0f,
-		0.5f,0.5f,0.5f,		1.0f,0.0f,
-		0.5f,0.5f,0.5f,		1.0f,0.0f,
-		0.5f,0.5f,-0.5f,		1.0f,1.0f,
-		-0.5f,0.5f,-0.5f,		0.0f,1.0f,
+		-0.5f,	0.5f,  -0.5f,	0.0f,1.0f,	 0.0f, 1.0f, 0.0f,
+		 0.5f,	0.5f,  -0.5f,	1.0f,1.0f,	 0.0f, 1.0f, 0.0f,
+		 0.5f,	0.5f,	0.5f,	1.0f,0.0f,	 0.0f, 1.0f, 0.0f,
+		 0.5f,	0.5f,	0.5f,	1.0f,0.0f,	 0.0f, 1.0f, 0.0f,
+		-0.5f,	0.5f,   0.5f,	1.0f,0.0f,	 0.0f, 1.0f, 0.0f,
+		-0.5f,	0.5f,  -0.5f,	0.0f,1.0f,	 0.0f, 1.0f, 0.0f,
 	};
 
 	// EBO 模式
@@ -126,18 +143,22 @@ void GLDraw::initModel() {
 	// 参数4：是否归1化
 	// 参数5：步长
 	// 参数6：起始地址
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float)*3));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*3));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*5));
 	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*6));
 
 	// 5. 激活锚点
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	//glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(2);
+
 	// 解绑VBO、VA0
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+
+	return VAO;
 }
 
 
@@ -145,35 +166,126 @@ void GLDraw::initModel() {
 void GLDraw::rander() {
 
 	
+	cam->update();
+
 	// 设置要清理画布的颜色
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	// 清理画布
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
+
+	// 太阳光的位置
+	glm::vec3 lightPos(3.0f,0.0f,-1.0f);
+	// 太阳光的强度
+	glm::vec3 sunLight(1.0f, 1.0f, 1.0f);
+	// 环境光的强度
+	float ambientStrength = 0.2f;
+	
+
+
 	// mvp 矩阵变换信息
-	vMatrix = glm::lookAt(glm::vec3(3.0, 3.0, 3.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+	vMatrix = cam->getVMatrix(); //glm::lookAt(glm::vec3(0.0, 0.0, 3.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 	pMatrix = glm::perspective(glm::radians(60.0f), float(width) / height, 1.0f, 100.0f);
 
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	// 使用shader 程序
-	shader->start();
 
-	// 传入vp 信息
-	shader->setMatrix("vMatrix", vMatrix);
-	shader->setMatrix("pMatrix", pMatrix);
 
-	//shader->shaderGreenTest();
+		glm::mat4 mMatrix(1.0f);
+		/*mMatrix = glm::translate(mMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
+		mMatrix = glm::rotate(mMatrix, glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f));*/
 
-	// 绑定VAO 主程序
-	glBindVertexArray(VAO);
+		// 使用shader 程序
+		cubeShader->start();
+
+		// 传入vp 信息
+		cubeShader->setMatrix("mMatrix", mMatrix);
+		cubeShader->setMatrix("vMatrix", vMatrix);
+		cubeShader->setMatrix("pMatrix", pMatrix);
+
+		// 传入光照信息
+		cubeShader->setVec3("lightPos", lightPos);
+		cubeShader->setVec3("viewPos", cam->getPosition());
+		cubeShader->setVec3("sunLight", sunLight);
+		cubeShader->setFloat("ambientStrength", ambientStrength);
+
+		//shader->shaderGreenTest();
+
+		// 绑定VAO 主程序
+		glBindVertexArray(VAO_cube);
+
+
+		// 告诉OpenGL 要画一个三角形， 从第0个顶点开始，有效顶点数3个
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// EBO的绘制方式
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		// 解绑shader 程序
+		cubeShader->end();
+
+		// 太阳光的位置
+		mMatrix = glm::mat4(1.0f);
+		mMatrix = glm::translate(mMatrix, glm::vec3(3.0f, 1.0f, -1.0f));
+		
+		sunShader->start();
+		sunShader->setMatrix("mMatrix", mMatrix);
+		sunShader->setMatrix("vMatrix", vMatrix);
+		sunShader->setMatrix("pMatrix", pMatrix);
+		glBindVertexArray(VAO_sun);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		sunShader->end();
+
 	
-	
-	// 告诉OpenGL 要画一个三角形， 从第0个顶点开始，有效顶点数3个
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
 
-	// EBO的绘制方式
-	//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+void GLDraw::testDrawCubes() {
+	glm::vec3 modelVecs[] = {
+		glm::vec3(0.0f,0.0f,0.0f),
+		glm::vec3(2.0f,5.0f,-15.0f),
+		glm::vec3(-1.5f,-2.2f,-2.5f),
+		glm::vec3(-3.8f,-2.0f,-12.3f),
+		glm::vec3(2.4f,-0.4f,-3.5f),
+		glm::vec3(-1.7f,3.0f,-7.5f),
+		glm::vec3(1.3f,-2.0f,-2.5f),
+		glm::vec3(1.5f,2.0f,-1.5f),
+		glm::vec3(1.5f,0.2f,-1.5f),
+		glm::vec3(-1.3f,1.0f,-1.5f),
+	};
 
-	// 解绑shader 程序
-	shader->end();
+	// mvp 矩阵变换信息
+	vMatrix = cam->getVMatrix(); //glm::lookAt(glm::vec3(0.0, 0.0, 3.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+	pMatrix = glm::perspective(glm::radians(60.0f), float(width) / height, 1.0f, 100.0f);
+
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		glm::mat4 mMatrix(1.0f);
+		mMatrix = glm::translate(mMatrix, modelVecs[i]);
+		mMatrix = glm::rotate(mMatrix, glm::radians(float(glfwGetTime())*(i + 1) * 5), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		// 使用shader 程序
+		cubeShader->start();
+
+		// 传入vp 信息
+		cubeShader->setMatrix("mMatrix", mMatrix);
+		cubeShader->setMatrix("vMatrix", vMatrix);
+		cubeShader->setMatrix("pMatrix", pMatrix);
+
+		//shader->shaderGreenTest();
+
+		// 绑定VAO 主程序
+		glBindVertexArray(VAO_cube);
+
+
+		// 告诉OpenGL 要画一个三角形， 从第0个顶点开始，有效顶点数3个
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// EBO的绘制方式
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		// 解绑shader 程序
+		cubeShader->end();
+
+	}
 }

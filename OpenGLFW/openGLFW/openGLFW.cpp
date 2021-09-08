@@ -2,6 +2,9 @@
 #include "Base.h"
 
 #include "GLDraw.h"
+#include "Camara.h"
+
+GLDraw* draw = new GLDraw(800, 600);
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -13,6 +16,24 @@ void processInput(GLFWwindow* window) {
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		draw->camMove(CAM_MOVE::MOVE_LEFT);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		draw->camMove(CAM_MOVE::MOVE_RIGHT);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		draw->camMove(CAM_MOVE::MOVE_FRONT);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		draw->camMove(CAM_MOVE::MOVE_BACK);
+	}
+}
+
+void mouse_callback(GLFWwindow* window,double xpos,double ypos) {
+	draw->mouseMove(xpos, ypos);
 }
 
 
@@ -49,9 +70,11 @@ int main()
 
 	// 窗口发生变动的时候的回调
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	
 	// 初始化顶点
-	GLDraw* draw = new GLDraw(800,600);
+	
 	draw->init();
 
 	while (!glfwWindowShouldClose(window))

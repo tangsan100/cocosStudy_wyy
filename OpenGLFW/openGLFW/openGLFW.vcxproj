@@ -163,7 +163,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="fragmentShader.glsl" />
+    <None Include="fSunShader.glsl" />
     <None Include="vertexShader.glsl" />
+    <None Include="vSunShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AImage.h" />

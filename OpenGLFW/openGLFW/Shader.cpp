@@ -2,6 +2,11 @@
 #include <fstream>
 #include <sstream>
 
+
+Shader::Shader() {
+	shaderProgram = 0;
+}
+
 void Shader::initShader(const char* vertexPath, const char* fragmentPath) {
 
 	// 打开文件
@@ -117,4 +122,12 @@ void Shader::setMatrix(const std::string name, glm::mat4 matrix) {
 	// 往shader 传值，把矩阵传入
 	glUniformMatrix4fv(glGetUniformLocation(this->shaderProgram, name.c_str()),
 		1, GL_FALSE, glm::value_ptr(matrix));
+}
+
+
+void Shader::setVec3(const std::string name, glm::vec3 v3) {
+	glUniform3fv(glGetUniformLocation(this->shaderProgram, name.c_str()), 1, glm::value_ptr(v3));
+}
+void Shader::setFloat(const std::string name, float f) {
+	glUniform1f(glGetUniformLocation(this->shaderProgram, name.c_str()), f);
 }
