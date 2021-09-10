@@ -162,18 +162,20 @@
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="fragmentShader.glsl" />
-    <None Include="fSunShader.glsl" />
-    <None Include="vertexShader.glsl" />
-    <None Include="vSunShader.glsl" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="AImage.h" />
     <ClInclude Include="Base.h" />
     <ClInclude Include="Camara.h" />
     <ClInclude Include="GLDraw.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stb_image.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\dirShaderF.glsl" />
+    <None Include="shader\dirShaderV.glsl" />
+    <None Include="shader\fragmentShader.glsl" />
+    <None Include="shader\fSunShader.glsl" />
+    <None Include="shader\vertexShader.glsl" />
+    <None Include="shader\vSunShader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

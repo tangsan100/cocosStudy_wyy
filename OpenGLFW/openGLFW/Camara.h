@@ -34,6 +34,7 @@ public:
 
 	glm::mat4 getVMatrix() { return vMatrix; }
 	glm::vec3 getPosition() { return position; }
+	glm::vec3 getDirection() { return front; }
 	void lookAt(glm::vec3 posEyes, glm::vec3 posFront, glm::vec3 posUp);
 	void update();
 	void move(CAM_MOVE type);

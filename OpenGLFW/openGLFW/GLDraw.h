@@ -15,20 +15,27 @@ private:
 	int height;
 
 
-	unsigned int VAO_cube = 0;
-	unsigned int VAO_sun = 0;
-	unsigned int textureID = 0;
+	uint VAO_cube = 0;
+	uint VAO_sun = 0;
+
 	Camara* cam;
 	Shader* cubeShader;
 	Shader* sunShader;
+	Shader* dirShader; // 平行光
+	Shader* pointShader; // 点光源
+	Shader* spotShader; // 点光源
 	AImage* img;
 
 	// vp 矩阵信息
 	glm::mat4 vMatrix;
 	glm::mat4 pMatrix;
+
+	// 材质贴图，光照贴图
+	uint textureBox;
+	uint textureSpec;
 public:
 	void init();
-	void initTexture();
+	uint createTexture(const char* fileName);
 	uint createModel();
 	void camMove(CAM_MOVE type) {
 		cam->move(type);
@@ -43,9 +50,20 @@ public:
 	~GLDraw();
 
 
+	void bindTexture();
+
 	// ------------测试案例
 	// 绘制多个立方体
 	void testDrawCubes();
+
+	// 测试材质，光照贴图等
+	void testMaterial();
+
+	// 测试平行光
+	void testDirLight();
+
+	// 测试聚光灯
+	void testSpotLight();
 	
 };
 

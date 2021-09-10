@@ -35,12 +35,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="fragmentShader.glsl" />
-    <None Include="vertexShader.glsl" />
-    <None Include="fSunShader.glsl" />
-    <None Include="vSunShader.glsl" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="GLDraw.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -59,5 +53,25 @@
     <ClInclude Include="Camara.h">
       <Filter>头文件</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\fragmentShader.glsl">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shader\fSunShader.glsl">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shader\vertexShader.glsl">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shader\vSunShader.glsl">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shader\dirShaderF.glsl">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="shader\dirShaderV.glsl">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

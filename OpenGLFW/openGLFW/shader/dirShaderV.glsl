@@ -1,8 +1,7 @@
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aUV;
-layout (location = 2) in vec3 aNormal; // ·¨Ïß
-
+layout (location = 2) in vec3 aNormal; // æ³•çº¿
 uniform mat4 vMatrix;
 uniform mat4 pMatrix;
 uniform mat4 mMatrix;
