@@ -23,5 +23,7 @@ public:
 	void setVec3(const std::string name, glm::vec3 v3);
 	void setFloat(const std::string name, float f);
 	void setInt(const std::string name, int i);
+
+	void getVal(const std::string name);
 };
 

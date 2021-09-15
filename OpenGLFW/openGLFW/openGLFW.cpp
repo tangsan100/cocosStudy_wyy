@@ -3,8 +3,11 @@
 
 #include "GLDraw.h"
 #include "Camara.h"
+#include "DrawTest.h"
 
-GLDraw* draw = new GLDraw(800, 600);
+DrawTest *draw = new DrawTest(800, 600);
+//GLDraw* draw = new GLDraw(800, 600);
+
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -84,7 +87,7 @@ int main()
 		
 
 		// TODO rander
-		draw->rander();
+		draw->render();
 
 		// 相当于缓冲区，双缓存，提高渲染效率
 		glfwSwapBuffers(window);

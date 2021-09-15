@@ -33,6 +33,9 @@
     <ClCompile Include="Camara.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="DrawTest.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLDraw.h">
@@ -51,6 +54,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Camara.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawTest.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -15,6 +15,6 @@ void main()
 	gl_Position = pMatrix * vMatrix * mMatrix * vec4(aPos.x,aPos.y,aPos.z,1.0);
 	ourUV = aUV;
 
-	// FragPos = vec3(mMatrix * vec4(aPos,1.0f));
-	// Normal = mat3(transpose(inverse(mMatrix)))*aNormal;
+	FragPos = vec3(vMatrix * mMatrix * vec4(aPos,1.0f));
+	Normal = mat3(transpose(inverse(mMatrix)))*aNormal;
 };

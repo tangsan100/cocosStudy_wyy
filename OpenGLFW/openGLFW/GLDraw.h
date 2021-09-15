@@ -21,9 +21,10 @@ private:
 	Camara* cam;
 	Shader* cubeShader;
 	Shader* sunShader;
-	Shader* dirShader; // 平行光
+	Shader* dirShader;   // 平行光
 	Shader* pointShader; // 点光源
-	Shader* spotShader; // 点光源
+	Shader* spotShader;  // 点光源
+	Shader* sceneShader; // 多光源
 	AImage* img;
 
 	// vp 矩阵信息
@@ -64,6 +65,9 @@ public:
 
 	// 测试聚光灯
 	void testSpotLight();
+
+	// 测试多光源
+	void testManyLights();
 	
 };
 

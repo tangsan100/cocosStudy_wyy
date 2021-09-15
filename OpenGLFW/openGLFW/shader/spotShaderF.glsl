@@ -9,6 +9,7 @@ struct tMaterial{
 	float shiness;	// 镜面发射衰减次幂
 };
 
+
 // 光源
 struct tLight{
 	vec3 pos;
@@ -42,12 +43,15 @@ uniform tLight  Light;
 uniform sampler2D ourTexure;
 uniform vec3 viewPos;
 
+
+
+
 void main()
 {
 
 	// ----距离衰减系数
-	float dist = length(Light.pos - FragPos);
-	float attenuation = 1.0f/(Light.c + Light.l*dist+ Light.q*dist*dist);
+	float dist = length(Light.pos - FragPos); // 指向光源
+	float attenuation = 1.0f/(Light.c + Light.l*dist+ Light.q*dist*dist); // 点光源 的衰减
 
 // -------------- 边缘衰减系数-------
 	vec3 normal = normalize(Normal);

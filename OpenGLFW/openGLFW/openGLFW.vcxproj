@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClCompile Include="AImage.cpp" />
     <ClCompile Include="Camara.cpp" />
+    <ClCompile Include="DrawTest.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="GLGraw.cpp" />
     <ClCompile Include="openGLFW.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="AImage.h" />
     <ClInclude Include="Base.h" />
     <ClInclude Include="Camara.h" />
+    <ClInclude Include="DrawTest.h" />
     <ClInclude Include="GLDraw.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stb_image.h" />
