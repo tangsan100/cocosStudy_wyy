@@ -167,6 +167,7 @@
     <ClInclude Include="Base.h" />
     <ClInclude Include="Camara.h" />
     <ClInclude Include="DrawTest.h" />
+    <ClInclude Include="gData.h" />
     <ClInclude Include="GLDraw.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stb_image.h" />

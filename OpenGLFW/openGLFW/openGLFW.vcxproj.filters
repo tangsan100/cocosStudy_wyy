@@ -59,6 +59,9 @@
     <ClInclude Include="DrawTest.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="gData.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\fragmentShader.glsl">

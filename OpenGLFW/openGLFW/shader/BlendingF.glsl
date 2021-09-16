@@ -6,6 +6,7 @@
 out vec4 FragColor;
 
 in vec2 ourUV;
+in vec3 FragPos;
 
 uniform sampler2D diffuse;
 
