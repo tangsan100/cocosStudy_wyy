@@ -21,7 +21,7 @@ public:
 	RGBA getColor(int x, int y) const { return data[width*y + x]; }
 
 public:
-	static AImage* loadImage(std::string filename);
+	static AImage* loadImage(std::string filename, bool reverse = true);
 
 };
 

@@ -3,6 +3,8 @@
 #include "AImage.h"
 #include "gData.h"
 #include <map>
+//#define STB_IMAGE_IMPLEMENTATION
+//#include "stb_image.h"
 
 DrawTest::DrawTest(int w,int h):width(w),height(h){
 	cam				= new Camara();
@@ -10,6 +12,7 @@ DrawTest::DrawTest(int w,int h):width(w),height(h){
 	shaderCube		= new Shader();
 	shaderBlending	= new Shader();
 	screenShader	= new Shader();
+	skyShader		= new Shader();
 }
 
 
@@ -20,6 +23,7 @@ DrawTest::~DrawTest() {
 	delete shaderColor;
 	delete shaderBlending;
 	delete screenShader;
+	delete skyShader;
 }
 
 void DrawTest::init() {
@@ -31,23 +35,26 @@ void DrawTest::init() {
 	cam->setSensitivity(0.1f);			// 设置相机的灵敏度
 
 	// 问题问题贴图
-	textureBox = createTexture("res/box.png");
-	textureSpec = createTexture("res/specular.png");
-	textureWin = createTexture("res/window.png");
-	texturePlane = createTexture("res/stone.png");
+	textureBox		= createTexture("res/box.png");
+	textureSpec		= createTexture("res/specular.png");
+	textureWin		= createTexture("res/window.png");
+	texturePlane	= createTexture("res/stone.png");
+	textureSkybox	= createSkyTexture();
 
 	// VAO 初始化
-	VAO_cube = createModel();
-	VAO_plane = createPlane();
-	VAO_win = createWindow();
+	VAO_cube	= createModel();
+	VAO_plane	= createPlane();
+	VAO_win		= createWindow();
 	frameBuffer = createFramBuffer();
 	VAO_texture = createScreenPlane();
+	VAO_skybox	= createSkyBox();
 
 	// 初始化shader
 	shaderColor->initShader("shader/colorV.glsl", "shader/colorF.glsl");
 	shaderCube->initShader("shader/cubeV.glsl", "shader/cubeF.glsl");
 	shaderBlending->initShader("shader/BlendingV.glsl", "shader/BlendingF.glsl");
 	screenShader->initShader("shader/frameBufferV.glsl", "shader/frameBufferF.glsl");
+	skyShader->initShader("shader/skyboxV.glsl", "shader/skyboxF.glsl");
 }
 
 uint DrawTest::createTexture(const char* fileName) {
@@ -68,6 +75,44 @@ uint DrawTest::createTexture(const char* fileName) {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img->getWidth(), img->getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img->getData());
 
 	delete img;
+	return textureID;
+}
+
+// 天空盒子的纹理
+uint DrawTest::createSkyTexture() {
+	uint textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+
+	std::vector<std::string> faces
+	{
+		"res/skybox/right.jpg",
+		"res/skybox/left.jpg",
+		"res/skybox/top.jpg",
+		"res/skybox/bottom.jpg",
+		"res/skybox/front.jpg",
+		"res/skybox/back.jpg"
+	};
+
+
+	for (int i = 0 ;i < faces.size(); ++i)
+	{
+		AImage* pImg = AImage::loadImage(faces[i].c_str(),false);
+		//unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+			0, GL_RGBA, pImg->getWidth(), pImg->getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, pImg->getData()
+		);
+		
+		delete pImg;
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
 	return textureID;
 }
 
@@ -226,6 +271,27 @@ uint DrawTest::createScreenPlane() {
 
 
 }
+
+uint DrawTest::createSkyBox() {
+	uint VAO;
+	uint VBO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(gSkyboxVertices), gSkyboxVertices, GL_STATIC_DRAW);
+	
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	
+	
+	/*glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);*/
+	return VAO;
+
+}
 // 启用纹理
 void DrawTest::bindTexture() {
 	glActiveTexture(GL_TEXTURE0);
@@ -245,7 +311,7 @@ void DrawTest::render() {
 	cam->update();
 
 	glEnable(GL_DEPTH_TEST);
-	glCullFace(GL_FRONT);
+	//glCullFace(GL_FRONT);
 	//glEnable(GL_STENCIL_TEST);
 
 	// 设置要清理画布的颜色
@@ -263,7 +329,9 @@ void DrawTest::render() {
 	// cullface
 	//testCullFace();
 	// 帧缓存
-	testFrameBuffer();
+	//testFrameBuffer();
+	// 天空盒
+	testSkybox();
 	
 }
 
@@ -452,4 +520,47 @@ void DrawTest::testFrameBuffer() {
 	glBindTexture(GL_TEXTURE_2D, textureBuffer);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	screenShader->end();
+}
+
+void DrawTest::testSkybox() {
+	
+	// mvp
+	glm::mat4 mMatrix(1.0f);
+	mMatrix = glm::translate(mMatrix, glm::vec3(0.0f, -0.4f, 0.0f));
+
+	glm::mat4 vMatrix = cam->getVMatrix();
+	glm::mat4 pMatrix = glm::perspective(glm::radians(60.0f), float(width) / height, 1.0f, 100.0f);
+
+	
+
+	//////////////////小立方体////////////////
+	//bindTexture(textureBox);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureSkybox);
+	shaderCube->start();
+	
+
+	shaderCube->setMatrix("mMatrix", mMatrix);
+	shaderCube->setMatrix("vMatrix", vMatrix);
+	shaderCube->setMatrix("pMatrix", pMatrix);
+	shaderCube->setVec3("viewPos",cam->getPosition());
+
+	glBindVertexArray(VAO_cube);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	shaderCube->end();
+
+	// 天空盒
+	glDepthFunc(GL_LEQUAL);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureSkybox);
+	skyShader->start();
+	glm::mat4 view = glm::mat4(glm::mat3(vMatrix));
+	skyShader->setMatrix("vMatrix", view);
+	skyShader->setMatrix("pMatrix", pMatrix);
+	glBindVertexArray(VAO_skybox);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	skyShader->end();
+
+	glDepthFunc(GL_LESS);
 }

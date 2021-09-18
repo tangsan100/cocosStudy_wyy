@@ -20,12 +20,12 @@ AImage::~AImage() {
 }
 
 
-AImage* AImage::loadImage(std::string filename) {
+AImage* AImage::loadImage(std::string filename, bool reverse) {
 	int picType = 0;
 	int picWidth = 0;
 	int picHeight = 0;
 
-	stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(reverse);
 
 	byte* buffer = stbi_load(filename.c_str(), &picWidth, &picHeight, &picType, STBI_rgb_alpha);
 

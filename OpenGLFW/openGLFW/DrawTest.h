@@ -17,22 +17,26 @@ private:
 	Shader *shaderCube;
 	Shader *shaderBlending; // °ëÍ¸Ã÷
 	Shader *screenShader; // frameBuffer
+	Shader *skyShader; // Ìì¿ÕºÐ×Ó
 
 	// ²ÄÖÊÌùÍ¼£¬¹âÕÕÌùÍ¼
 	uint textureBox;
 	uint textureSpec;
 	uint textureWin;
 	uint texturePlane;
+	uint textureSkybox;
 
 	// ÏäÌåµÄVAO
 	uint VAO_cube = 0;
 	uint VAO_plane = 0;
 	uint VAO_win = 0;
+	uint VAO_skybox = 0;
 
 	// famebuffer
 	uint frameBuffer = 0;
 	uint textureBuffer = 0;
 	uint VAO_texture = 0;
+
 	
 public:
 	DrawTest(int w, int h);
@@ -40,11 +44,13 @@ public:
 
 	void init();
 	uint createTexture(const char* fileName);
+	uint createSkyTexture();
 	uint createModel();
 	uint createPlane();
 	uint createWindow();
 	uint createFramBuffer();
 	uint createScreenPlane();
+	uint createSkyBox();
 	void bindTexture();
 	void bindTexture(uint textureID);
 	void render();
@@ -54,6 +60,7 @@ public:
 	void testBlending();	// °ëÍ¸Ã÷»æÖÆ
 	void testCullFace();	// cullFace ¼ô²Ã
 	void testFrameBuffer();  // ²âÊÔÖ¡»º´æ
+	void testSkybox();		 // ²âÊÔÌì¿ÕºÐ×Ó
 
 	void camMove(CAM_MOVE type) {
 		cam->move(type);
