@@ -7,38 +7,52 @@ Shader::Shader() {
 	shaderProgram = 0;
 }
 
-void Shader::initShader(const char* vertexPath, const char* fragmentPath) {
+void Shader::initShader(const char* vertexPath, const char* fragmentPath, const char* geoPath) {
 
 	// 打开文件
 	std::string vShaderCode("");
 	std::string fShaderCoder("");
+	std::string gShaderCode("");
 	this->readShaderFile(vertexPath, vShaderCode);
 	this->readShaderFile(fragmentPath, fShaderCoder);
-	const char* _vShaderStr = vShaderCode.c_str(); //_vertexCode.c_str();
-	const char* _fShaderStr = fShaderCoder.c_str(); //_fragCode.c_str();
+	this->readShaderFile(geoPath, gShaderCode);
+	//const char* _vShaderStr = vShaderCode.c_str(); //_vertexCode.c_str();
+	//const char* _fShaderStr = fShaderCoder.c_str(); //_fragCode.c_str();
+	//const char* _gShaderStr = gShaderCode.c_str(); //geoCode.c_str();
 
 
 	//编译
-	unsigned int _vertexID = this->CompileShader(_vShaderStr, GL_VERTEX_SHADER);
+	uint _vertexID = this->CompileShader(vShaderCode, GL_VERTEX_SHADER);
 
 	// 编译
-	unsigned int  _fragID = this->CompileShader(_fShaderStr, GL_FRAGMENT_SHADER);
+	uint  _fragID = this->CompileShader(fShaderCoder, GL_FRAGMENT_SHADER);
+
+	// g
+	uint  _geoID = this->CompileShader(gShaderCode, GL_GEOMETRY_SHADER);
 
 
 	// 链接
-	this->drawLink(_vertexID, _fragID);
+	this->drawLink(_vertexID, _fragID, _geoID);
 	glDeleteShader(_vertexID);
 	glDeleteShader(_fragID);
 }
 
-void Shader::drawLink(unsigned int vertexID, unsigned int fragmentID) {
+void Shader::drawLink(unsigned int vertexID, unsigned int fragmentID,unsigned int geoID) {
 
 	char _infoLog[512];
 	int _successFlag = 0;
 
 	shaderProgram = glCreateProgram();
 	glAttachShader(shaderProgram, vertexID);
+	if (geoID != 0)
+	{
+		glAttachShader(shaderProgram, geoID);
+	}
+
 	glAttachShader(shaderProgram, fragmentID);
+
+	
+
 	glLinkProgram(shaderProgram);
 
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &_successFlag);
@@ -50,14 +64,20 @@ void Shader::drawLink(unsigned int vertexID, unsigned int fragmentID) {
 
 }
 
-unsigned int Shader::CompileShader(const char* shaderCode, unsigned int mode) {
+ uint Shader::CompileShader(std::string shaderCode, unsigned int mode) {
+
+	if (shaderCode.empty())
+	{
+		return 0;
+	}
 	unsigned shaderID = 0;
 	char _infoLog[512];
 	int _successFlag = 0;
+	const char* code = shaderCode.c_str();
 
 	shaderID = glCreateShader(mode);
 	//传入代码
-	glShaderSource(shaderID, 1, &shaderCode, NULL);
+	glShaderSource(shaderID, 1, &code, NULL);
 	// 编译
 	glCompileShader(shaderID);
 	//获取编译状态
@@ -74,6 +94,10 @@ unsigned int Shader::CompileShader(const char* shaderCode, unsigned int mode) {
 
 void Shader::readShaderFile(const char* file, std::string &code) {
 
+	if (file == nullptr)
+	{
+		return;
+	}
 
 	std::ifstream shaderFile;
 

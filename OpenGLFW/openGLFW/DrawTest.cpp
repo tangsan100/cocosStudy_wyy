@@ -13,6 +13,10 @@ DrawTest::DrawTest(int w,int h):width(w),height(h){
 	shaderBlending	= new Shader();
 	screenShader	= new Shader();
 	skyShader		= new Shader();
+	shaderRed		= new Shader();
+	shaderGreen		= new Shader();
+	shaderGeo		= new Shader();
+	shaderBox		= new Shader();
 }
 
 
@@ -24,6 +28,9 @@ DrawTest::~DrawTest() {
 	delete shaderBlending;
 	delete screenShader;
 	delete skyShader;
+	delete shaderRed;
+	delete shaderGreen;
+	delete shaderBox;
 }
 
 void DrawTest::init() {
@@ -48,13 +55,29 @@ void DrawTest::init() {
 	frameBuffer = createFramBuffer();
 	VAO_texture = createScreenPlane();
 	VAO_skybox	= createSkyBox();
+	VAO_house	= createHouse();
+	VAO_box		= createModel();
 
+	// UBO
+	UBO_red = createUBO();
+	
 	// 初始化shader
+	shaderBox->initShader("shader/boxV.glsl", "shader/boxF.glsl");
 	shaderColor->initShader("shader/colorV.glsl", "shader/colorF.glsl");
 	shaderCube->initShader("shader/cubeV.glsl", "shader/cubeF.glsl");
 	shaderBlending->initShader("shader/BlendingV.glsl", "shader/BlendingF.glsl");
 	screenShader->initShader("shader/frameBufferV.glsl", "shader/frameBufferF.glsl");
 	skyShader->initShader("shader/skyboxV.glsl", "shader/skyboxF.glsl");
+	shaderRed->initShader("shader/c4/uboShaderV.glsl", "shader/c4/uboShaderF.glsl");
+	shaderGreen->initShader("shader/c4/uboShaderV.glsl", "shader/c4/uboShaderF.glsl");
+	shaderGeo->initShader("shader/c4/geoShaderV.glsl", "shader/c4/geoShaderF.glsl", "shader/c4/geoShaderG.glsl");
+
+	bindShaderData();
+
+	
+
+	
+	
 }
 
 uint DrawTest::createTexture(const char* fileName) {
@@ -292,6 +315,48 @@ uint DrawTest::createSkyBox() {
 	return VAO;
 
 }
+
+uint DrawTest::createUBO() {
+	uint ubo;
+	glGenBuffers(1, &ubo);
+	glBindBuffer(GL_UNIFORM_BUFFER,ubo);
+
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	return ubo;
+}
+
+uint DrawTest::createHouse() {
+
+	float points[] = {
+		-0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
+		 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // top-right
+		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
+		-0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
+	};
+
+	uint VAO, VBO;
+	glGenBuffers(1, &VBO);
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points), &points, GL_STATIC_DRAW);
+
+	
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0); // 顶点
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 2)); //颜色
+
+	// 5. 激活锚点
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
+	// 解绑VBO、VA0
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	return VAO;
+}
 // 启用纹理
 void DrawTest::bindTexture() {
 	glActiveTexture(GL_TEXTURE0);
@@ -307,6 +372,18 @@ void DrawTest::bindTexture(uint textureId) {
 	glBindTexture(GL_TEXTURE_2D, textureId);
 }
 
+void DrawTest::bindShaderData() {
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, UBO_red);
+
+	uint red = glGetUniformBlockIndex(shaderRed->getProgram(), "MAT");
+	glUniformBlockBinding(shaderRed->getProgram(), red, 0);
+
+	uint green = glGetUniformBlockIndex(shaderGreen->getProgram(), "MAT");
+	glUniformBlockBinding(shaderGreen->getProgram(), green, 0);
+	
+}
+
+
 void DrawTest::render() {
 	cam->update();
 
@@ -315,7 +392,7 @@ void DrawTest::render() {
 	//glEnable(GL_STENCIL_TEST);
 
 	// 设置要清理画布的颜色
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	// 清理画布
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -331,7 +408,11 @@ void DrawTest::render() {
 	// 帧缓存
 	//testFrameBuffer();
 	// 天空盒
-	testSkybox();
+	//testSkybox();
+	//UBO
+	//testUboData();
+	//GEO
+	testGeo();
 	
 }
 
@@ -563,4 +644,78 @@ void DrawTest::testSkybox() {
 	skyShader->end();
 
 	glDepthFunc(GL_LESS);
+}
+
+
+void DrawTest::testUboData() {
+
+	// mvp
+	glm::mat4 mMatrix(1.0f);
+	mMatrix = glm::translate(mMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
+
+	glm::mat4 vMatrix = cam->getVMatrix();
+	glm::mat4 pMatrix = glm::perspective(glm::radians(60.0f), float(width) / height, 1.0f, 100.0f);
+
+	glBindBuffer(GL_UNIFORM_BUFFER, UBO_red);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(pMatrix));
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(vMatrix));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	shaderRed->start();
+	shaderRed->setVec3("color", glm::vec3(1.0f, 0.0, 0.0));
+	shaderRed->setMatrix("mMatrix", mMatrix);
+	glBindVertexArray(VAO_cube);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	shaderRed->end();
+
+	shaderGreen->start();
+	shaderRed->setVec3("color", glm::vec3(0.0f, 1.0, 0.0));
+	mMatrix = glm::mat4(1.0f);
+	mMatrix = glm::translate(mMatrix, glm::vec3(1.0, 0.0f, -3.0f));
+	shaderRed->setMatrix("mMatrix", mMatrix);
+	glBindVertexArray(VAO_cube);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	shaderRed->end();
+}
+
+
+void DrawTest::testGeo() {
+
+	bindTexture();
+	
+	// mvp
+	glm::mat4 mMatrix(1.0f);
+	mMatrix = glm::translate(mMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
+
+	glm::mat4 vMatrix = cam->getVMatrix();
+	glm::mat4 pMatrix = glm::perspective(glm::radians(60.0f), float(width) / height, 1.0f, 100.0f);
+
+	
+
+	shaderBox->start();
+
+	shaderBox->setMatrix("mMatrix", mMatrix);
+	shaderBox->setMatrix("vMatrix", vMatrix);
+	shaderBox->setMatrix("pMatrix", pMatrix);
+
+	glBindVertexArray(VAO_box);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	shaderBox->end();
+
+
+	shaderGeo->start();
+	shaderGeo->setMatrix("mMatrix", mMatrix);
+	shaderGeo->setMatrix("vMatrix", vMatrix);
+	shaderGeo->setMatrix("pMatrix", pMatrix);
+	glBindVertexArray(VAO_box);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	shaderGeo->end();
+
+
+	/*shaderGeo->start();
+	glBindVertexArray(VAO_house);
+	glDrawArrays(GL_POINTS, 0, 4);
+	shaderGeo->end();*/
 }

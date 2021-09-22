@@ -9,10 +9,12 @@ public:
 	Shader();
 	~Shader(){}
 
-	void initShader(const char* vertexPath, const char* fragPath);
+	uint getProgram() { return shaderProgram; }
+
+	void initShader(const char* vertexPath, const char* fragPath,const char* geoPath=nullptr);
 	void readShaderFile(const char* file, std::string &code);
-	unsigned int CompileShader(const char* shaderCode, unsigned int mode);
-	void drawLink(unsigned int vertexID, unsigned int fragmentID);
+	unsigned int CompileShader(std::string shaderCode, unsigned int mode);
+	void drawLink(unsigned int vertexID, unsigned int fragmentID, unsigned int geoID=-1);
 
 	void shaderGreenTest();
 
