@@ -2,6 +2,7 @@
 #include <string>
 #include "Base.h"
 #include "Camara.h"
+#include "IO.h"
 
 class Shader;
 class AImage;
@@ -27,6 +28,9 @@ private:
 	Shader* sceneShader; // 多光源
 	AImage* img;
 
+
+	FF::ffModel* model;
+
 	// vp 矩阵信息
 	glm::mat4 vMatrix;
 	glm::mat4 pMatrix;
@@ -46,7 +50,7 @@ public:
 		cam->mouseMove(x, y);
 	}
 	
-	void rander();
+	void render();
 	GLDraw(int width,int height);
 	~GLDraw();
 

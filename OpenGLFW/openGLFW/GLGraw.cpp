@@ -36,6 +36,8 @@ GLDraw::GLDraw(int width,int height):width(width),height(height) {
 
 	vMatrix		= glm::mat4(1.0f);
 	pMatrix		= glm::mat4(1.0f);
+
+	
 }
 
 GLDraw::~GLDraw() {
@@ -60,12 +62,16 @@ void GLDraw::init() {
 	textureBox = createTexture("res/box.png");
 	textureSpec = createTexture("res/specular.png");
 
+	model = new FF::ffModel("res/backpack/backpack.obj");
+
 	//cubeShader->initShader("shader/vertexShader.glsl", "shader/fragmentShader.glsl");
 	sunShader->initShader("shader/vSunShader.glsl", "shader/fSunShader.glsl");
-	/*dirShader->initShader("shader/dirShaderV.glsl", "shader/dirShaderF.glsl");
+	dirShader->initShader("shader/dirShaderV.glsl", "shader/dirShaderF.glsl");
 	pointShader->initShader("shader/pointShaderV.glsl", "shader/pointShaderF.glsl");
-	spotShader->initShader("shader/spotShaderV.glsl", "shader/spotShaderF.glsl");*/
+	spotShader->initShader("shader/spotShaderV.glsl", "shader/spotShaderF.glsl");
 	sceneShader->initShader("shader/sceneShaderV.glsl", "shader/sceneShaderF.glsl");
+
+	
 }
 
 uint GLDraw::createTexture(const char* fileName) {
@@ -197,7 +203,7 @@ uint GLDraw::createModel() {
 
 
 
-void GLDraw::rander() {
+void GLDraw::render() {
 
 	
 	cam->update();
@@ -209,9 +215,9 @@ void GLDraw::rander() {
 	glEnable(GL_DEPTH_TEST);
 
 	//testMaterial();
-	//testDirLight();
+	testDirLight();
 	//testSpotLight();
-	testManyLights();
+	//testManyLights();
 }
 
 void GLDraw::bindTexture() {
@@ -357,9 +363,11 @@ void GLDraw::testDirLight() {
 
 
 	// 传入材质属性
-	pointShader->setInt("Matrial.diffuse", 0);
-	pointShader->setInt("Matrial.specular", 1);
-	pointShader->setFloat("Matrial.shiness", 32);
+	/*pointShader->setInt("myMatrial.diffuse1", 0);
+	pointShader->setInt("myMatrial.specular1", 1);*/
+	pointShader->setFloat("myMaterial.shiness", 32);
+
+	//pointShader->setFloat("myMatrial.shiness", 32);
 
 	// 传入vp 信息
 	
@@ -368,7 +376,7 @@ void GLDraw::testDirLight() {
 	pointShader->setVec3("viewPos", cam->getPosition());
 
 
-	for (int i = 0; i < 9; i++)
+	/*for (int i = 0; i < 9; i++)
 	{
 		mMatrix = glm::mat4(1.0f);
 		mMatrix = glm::translate(mMatrix, modelVecs[i]);
@@ -377,7 +385,9 @@ void GLDraw::testDirLight() {
 
 		glBindVertexArray(VAO_cube);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-	}
+	}*/
+
+	model->draw(pointShader);
 
 	// 解绑shader 程序
 	pointShader->end();

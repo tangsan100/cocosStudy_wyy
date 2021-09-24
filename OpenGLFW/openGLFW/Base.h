@@ -61,3 +61,21 @@ struct RGBA
 	}
 
 };
+
+#define SINGLE_INSTANCE(className) private:\
+										static className* mInstance;\
+										className(const className& gw)=delete;\
+										className& operator=(const className& ins)=delete;\
+									public:\
+										~className()\
+										{\
+											this->SINGLE_OVER();\
+											delete mInstance;\
+										}\
+										static className* getInstance(){\
+											if (mInstance == nullptr)\
+											{\
+												mInstance = new className();\
+											}\
+											return mInstance;\
+										}

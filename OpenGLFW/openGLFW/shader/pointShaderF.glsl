@@ -3,11 +3,12 @@
 // ------- 定义材质和光源的结构
 // 材质
 struct tMaterial{
-	sampler2D diffuse; // 材质贴图
-	sampler2D specular; // 光照贴图
+	sampler2D diffuse1; // 材质贴图
+	sampler2D specular1; // 光照贴图
 
 	float shiness;	// 镜面发射衰减次幂
 };
+
 
 // 点光源
 struct tLight{
@@ -35,9 +36,9 @@ in vec3 FragPos;
 
 
 // 用户传入的参数
-uniform tMaterial Material;
+uniform tMaterial myMaterial;
 uniform tLight  Light;
-uniform sampler2D ourTexure;
+// uniform sampler2D ourTexure;
 uniform vec3 viewPos;
 
 void main()
@@ -45,7 +46,7 @@ void main()
 	float dist = length(Light.pos - FragPos);
 	float attenuation = 1.0f/(Light.c + Light.l*dist+ Light.q*dist*dist);
 	// ---------------环境光------------
-	vec3  ambient = Light.ambient * vec3(texture(Material.diffuse,ourUV));
+	vec3  ambient = Light.ambient * vec3(texture(myMaterial.diffuse1,ourUV));
 
 	// ---------------漫反射 ------
 	vec3 normal = normalize(Normal);
@@ -54,7 +55,7 @@ void main()
 
 	// 阳光在法线方向上的分量
 	float diff =  max(dot(lightDir,normal),0.0);
-	vec3 diffuse = Light.diffuse*diff*vec3(texture(Material.diffuse,ourUV));
+	vec3 diffuse = Light.diffuse*diff*vec3(texture(myMaterial.diffuse1,ourUV));
 
 
 	// --------------- 镜面反射------
@@ -65,12 +66,12 @@ void main()
 	// 反射光向量
 	vec3 refectDir = normalize(reflect(-lightDir,normal));
 	// 反射光在观察方向的投影，求32次方
-	float spec = pow(max(dot(viewDir,refectDir),0),Material.shiness);
+	float spec = pow(max(dot(viewDir,refectDir),0),myMaterial.shiness);
 	// 最终的反射强度结果
-	vec3 specular = Light.specular*spec*vec3(texture(Material.specular,ourUV)); 
+	vec3 specular = Light.specular*spec*vec3(texture(myMaterial.specular1,ourUV)); 
 
 	// ------最终结果
 	// 光照强弱= 环境光+漫反射光 + 镜面反射光
 	vec3 result = ambient + diffuse + specular;
-	FragColor = texture(ourTexure,ourUV) * vec4(result, 1.0f)*attenuation;
+	FragColor = texture((myMaterial.specular1,ourUV) * vec4(result, 1.0f)*attenuation;
 };

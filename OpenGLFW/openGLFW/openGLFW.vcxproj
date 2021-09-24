@@ -91,13 +91,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\study\more\openGLFW\openGLFW\glad\include;E:\study\more\openGLFW\openGLFW\glfw2017\include;./;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\study\more\openGLFW\openGLFW\assimp\include;E:\study\more\openGLFW\openGLFW\glad\include;E:\study\more\openGLFW\openGLFW\glfw2017\include;./;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>E:\study\more\openGLFW\openGLFW\glfw2017\lib-vc2017;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>E:\study\more\openGLFW\openGLFW\glfw2017\lib-vc2017;E:\study\more\openGLFW\openGLFW\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -159,6 +159,7 @@
     <ClCompile Include="DrawTest.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="GLGraw.cpp" />
+    <ClCompile Include="IO.cpp" />
     <ClCompile Include="openGLFW.cpp" />
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
@@ -169,6 +170,7 @@
     <ClInclude Include="DrawTest.h" />
     <ClInclude Include="gData.h" />
     <ClInclude Include="GLDraw.h" />
+    <ClInclude Include="IO.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
