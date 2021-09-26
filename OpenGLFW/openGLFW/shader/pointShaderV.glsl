@@ -13,7 +13,7 @@ out vec3 FragPos;
 
 void main()
 {
-	gl_Position = pMatrix * vMatrix * mMatrix * vec4(aPos.x,aPos.y,aPos.z,1.0);
+	gl_Position = pMatrix * vMatrix * mMatrix * vec4(aPos,1.0);
 	ourUV = aUV;
 
 	FragPos = vec3(mMatrix * vec4(aPos,1.0f));

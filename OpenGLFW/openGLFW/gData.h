@@ -2,7 +2,7 @@
 #include "Base.h"
 #include <vector>
 
-std::vector<glm::vec3> gWinPos{
+static std::vector<glm::vec3> gWinPos{
 	glm::vec3(1.5f, 0.0f, -0.48f),
 	glm::vec3(1.5f,0.0f,0.51f),
 	glm::vec3(0.0f,0.0f,0.7f),
@@ -10,7 +10,7 @@ std::vector<glm::vec3> gWinPos{
 	glm::vec3(0.5f,0.0f,-0.6f)
 };
 
-float gCubeVertices[] = {
+static float gCubeVertices[] = {
 	// points				// normal			//textCoods
 	// Back face
 	-0.5f, -0.5f, -0.5f,	0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // Bottom-left
@@ -56,7 +56,7 @@ float gCubeVertices[] = {
 	-0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,  0.0f, 0.0f  // bottom-left        
 };
 
-float gPlaneVextices[] = {
+static float gPlaneVextices[] = {
 		 5.0f,	-0.5f,	 5.0f,	0.0f,  1.0f,  0.0f, 2.0f, 0.0f,
 		-5.0f,	-0.5f,	 5.0f,	0.0f,  1.0f,  0.0f, 0.0f, 0.0f,
 		-5.0f,	-0.5f,	-5.0f,	0.0f,  1.0f,  0.0f, 0.0f, 2.0f,
@@ -66,7 +66,7 @@ float gPlaneVextices[] = {
 		 5.0f,	-0.5f,	-5.0f,	0.0f,  1.0f,  0.0f, 2.0f, 2.0f,
 };
 
-float gWinVextices[] = {
+static float gWinVextices[] = {
 		0.0f,	 0.5f,	0.0f,	0.0f,  1.0f,  0.0f,	0.0f, 0.0f,
 		0.0f,	-0.5f,	0.0f,	0.0f,  1.0f,  0.0f,	0.0f, 1.0f,
 		1.0f,	-0.5f,	0.0f,	0.0f,  1.0f,  0.0f,	1.0f, 1.0f,
@@ -77,7 +77,7 @@ float gWinVextices[] = {
 };
 
 // 天空盒子顶点数据
-float gSkyboxVertices[] = {
+static float gSkyboxVertices[] = {
 	// positions          
 	-1.0f,  1.0f, -1.0f,
 	-1.0f, -1.0f, -1.0f,

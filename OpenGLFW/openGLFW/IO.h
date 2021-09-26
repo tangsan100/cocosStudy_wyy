@@ -42,11 +42,12 @@ namespace FF {
 
 
 		void draw(Shader* shader);
-	private:
+	public:
 		
 		std::vector<ffVertex>	vertexVec;// 顶点信息
 		std::vector<uint>		indexVec;// 顶点的索引
 		std::vector<ffTexture>	texVec; // 纹理信息
+	
 		uint					VAO;
 
 	private:
@@ -60,11 +61,13 @@ namespace FF {
 		}
 
 		void draw(Shader* shader);
-	private:
+		
+	public:
 		std::vector<ffMesh> meshVec;
 		std::string			dir;
 
 	private:
+		
 		void loadModel(std::string path);
 		void processNode(aiNode* node, const aiScene* scene);
 		ffMesh processMesh(aiMesh*mesh, const aiScene* scene);

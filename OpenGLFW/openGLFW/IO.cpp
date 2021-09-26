@@ -18,7 +18,7 @@ namespace FF {
 	void ffMesh::draw(Shader* shader) {
 
 		uint diffuseN = 1, specularN = 1;
-		for (int i = 0; i < texVec.size(); i++)
+		for (uint i = 0; i < texVec.size(); i++)
 		{
 			glActiveTexture(GL_TEXTURE0 + i);
 			std::string typeName = texVec[i].type;
@@ -53,23 +53,29 @@ namespace FF {
 		uint VBO = 0, EBO = 0;
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
+		glGenBuffers(1, &EBO);
+
+
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertexVec), &vertexVec[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertexVec.size()*sizeof(ffVertex), &vertexVec[0], GL_STATIC_DRAW);
 
-		glGenBuffers(1, &EBO);
+		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexVec), &indexVec[0], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint)*indexVec.size(), &indexVec[0], GL_STATIC_DRAW);
 
+		// ¶¥µã
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ffVertex), (void*)0);
+		// ·¨Ïß
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(ffVertex), (void*)(offsetof(ffVertex,normal)));
+		// uv
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(ffVertex), (void*)(offsetof(ffVertex, texCoord)));
 
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		//glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
 

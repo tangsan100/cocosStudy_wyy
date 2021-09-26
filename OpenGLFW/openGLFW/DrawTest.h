@@ -2,6 +2,7 @@
 
 #include "Base.h"
 #include "Camara.h"
+#include "IO.h"
 
 class Shader;
 
@@ -22,6 +23,8 @@ private:
 	Shader *shaderGreen; //测试ubo
 	Shader *shaderGeo; // 测试geo
 	Shader *shaderBox;
+	Shader *planetShader; // 行星
+	Shader *rockShader;
 
 	// 材质贴图，光照贴图
 	uint textureBox;
@@ -46,12 +49,20 @@ private:
 	// UBO 
 	uint UBO_red;
 
-	
+	// 模型
+	FF::ffModel* planet; //行星
+	FF::ffModel* rock;	// 陨石
+
+	glm::mat4* matrixArr;
 public:
 	DrawTest(int w, int h);
 	~DrawTest();
 
 	void init();
+
+	// instanceID 实例绘制类型
+	void initInstanceArray();
+
 	uint createTexture(const char* fileName);
 	uint createSkyTexture();
 	uint createModel();
@@ -75,6 +86,7 @@ public:
 	void testSkybox();		 // 测试天空盒子
 	void testUboData();		// 测试UBO
 	void testGeo();
+	void testInstance(); //测试模型，批量绘制
 
 	void camMove(CAM_MOVE type) {
 		cam->move(type);

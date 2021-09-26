@@ -6,7 +6,7 @@ Camara::Camara() {
 	position	= glm::vec3(0, 0, 0);
 	front		= glm::vec3(0, 0, 0);
 	up			= glm::vec3(0, 0, 0);
-	speed		= 0.01f;
+	speed		= 0.08f;
 
 	rPitch		= 0;
 	rYaw		= -90.0f;

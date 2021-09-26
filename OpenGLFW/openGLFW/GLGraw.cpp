@@ -3,6 +3,7 @@
 #include "Shader.h"
 #include "AImage.h"
 #include "Camara.h"
+#include "gData.h"
 
 
 glm::vec3 modelVecs[] = {
@@ -174,7 +175,7 @@ uint GLDraw::createModel() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 	// 3. 给vbo分配显存空间 传输数据, STATIC_DRAW 告诉GPU 顶点数据不会变动
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(gCubeVertices), &gCubeVertices, GL_STATIC_DRAW);
 
 	// 4. 告诉shader数据解析方式
 	// 参数1： 从哪个位置开始读，锚点，layout 的位置信息
@@ -184,9 +185,8 @@ uint GLDraw::createModel() {
 	// 参数5：步长
 	// 参数6：起始地址
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*3));
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*5));
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*6));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*3));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*6));
 
 	// 5. 激活锚点
 	glEnableVertexAttribArray(0);
@@ -363,11 +363,11 @@ void GLDraw::testDirLight() {
 
 
 	// 传入材质属性
-	/*pointShader->setInt("myMatrial.diffuse1", 0);
-	pointShader->setInt("myMatrial.specular1", 1);*/
-	pointShader->setFloat("myMaterial.shiness", 32);
+	/*pointShader->setInt("myMaterial.diffuse1", 0);
+	pointShader->setInt("myMaterial.specular1", 1);
+	pointShader->setFloat("myMaterial.shiness", 32);*/
 
-	//pointShader->setFloat("myMatrial.shiness", 32);
+	pointShader->setFloat("myMaterial.shiness", 32);
 
 	// 传入vp 信息
 	
@@ -386,6 +386,13 @@ void GLDraw::testDirLight() {
 		glBindVertexArray(VAO_cube);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}*/
+	mMatrix = glm::translate(mMatrix, glm::vec3(0.0f, 0.0f, -1.0f));
+	
+	mMatrix = glm::rotate(mMatrix, glm::radians(30.0f), glm::vec3(0.0, 1.0, 0.0));
+	mMatrix = glm::scale(mMatrix, glm::vec3(0.5, 0.5, 0.5));
+	pointShader->setMatrix("mMatrix", mMatrix);
+	/*glBindVertexArray(VAO_cube);
+	glDrawArrays(GL_TRIANGLES, 0, 36);*/
 
 	model->draw(pointShader);
 
@@ -394,7 +401,7 @@ void GLDraw::testDirLight() {
 
 	// 太阳光的位置
 	mMatrix = glm::mat4(1.0f);
-	mMatrix = glm::translate(mMatrix, glm::vec3(3.0f, 1.0f, -1.0f));
+	mMatrix = glm::translate(mMatrix, glm::vec3(1.0f, 2.0f, 1.0f));
 
 	sunShader->start();
 	sunShader->setMatrix("mMatrix", mMatrix);

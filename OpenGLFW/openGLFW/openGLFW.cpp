@@ -5,8 +5,8 @@
 #include "Camara.h"
 #include "DrawTest.h"
 
-//DrawTest *draw = new DrawTest(800, 600);
-GLDraw* draw = new GLDraw(800, 600);
+DrawTest *draw = new DrawTest(800, 600);
+//GLDraw* draw = new GLDraw(800, 600);
 
 
 

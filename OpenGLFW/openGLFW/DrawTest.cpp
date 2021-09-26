@@ -6,6 +6,8 @@
 //#define STB_IMAGE_IMPLEMENTATION
 //#include "stb_image.h"
 
+const static int AMOUNT = 10000;
+
 DrawTest::DrawTest(int w,int h):width(w),height(h){
 	cam				= new Camara();
 	shaderColor		= new Shader();
@@ -17,6 +19,10 @@ DrawTest::DrawTest(int w,int h):width(w),height(h){
 	shaderGreen		= new Shader();
 	shaderGeo		= new Shader();
 	shaderBox		= new Shader();
+	planetShader	= new Shader();
+	rockShader		= new Shader();
+
+	matrixArr = new glm::mat4[AMOUNT];
 }
 
 
@@ -31,11 +37,14 @@ DrawTest::~DrawTest() {
 	delete shaderRed;
 	delete shaderGreen;
 	delete shaderBox;
+	delete planetShader;
+	delete rockShader;
+	delete[]matrixArr;
 }
 
 void DrawTest::init() {
 	// 初始化相机
-	glm::vec3 eyes(0.0f, 0.0f, 3.0f);	// 观察位置
+	glm::vec3 eyes(0.0f, 0.0f, 155.0f);	// 观察位置
 	glm::vec3 front(0.0f, 0.0f, 1.0f);	// 前方位置
 	glm::vec3 popUp(0.0f, 1.0f, 0.0f);  // 相机仰角
 	cam->lookAt(eyes, front, popUp);
@@ -60,6 +69,9 @@ void DrawTest::init() {
 
 	// UBO
 	UBO_red = createUBO();
+
+	planet = new FF::ffModel("res/planet/planet.obj");
+	rock = new FF::ffModel("res/rock/rock.obj");
 	
 	// 初始化shader
 	shaderBox->initShader("shader/boxV.glsl", "shader/boxF.glsl");
@@ -71,13 +83,78 @@ void DrawTest::init() {
 	shaderRed->initShader("shader/c4/uboShaderV.glsl", "shader/c4/uboShaderF.glsl");
 	shaderGreen->initShader("shader/c4/uboShaderV.glsl", "shader/c4/uboShaderF.glsl");
 	shaderGeo->initShader("shader/c4/geoShaderV.glsl", "shader/c4/geoShaderF.glsl", "shader/c4/geoShaderG.glsl");
+	planetShader->initShader("shader/c5/planetV.glsl", "shader/c5/planetF.glsl");
+	rockShader->initShader("shader/c5/rockV.glsl", "shader/c5/rockF.glsl");
 
 	bindShaderData();
+	initInstanceArray();
 
 	
 
 	
 	
+}
+
+void DrawTest::initInstanceArray() {
+	
+	srand(glfwGetTime());
+
+	float radius = 100.0f;
+	float offset = 15.0f;
+	
+
+	for (uint i = 0; i < AMOUNT; i++)
+	{
+		glm::mat4 model(1.0f);
+		float angle = float(i) / float(AMOUNT) * 360.0f;
+
+		float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float x = sin(angle)*radius + displacement;
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float y = displacement * 0.4f;
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float z = cos(angle)*radius + displacement;
+
+		model = glm::translate(model, glm::vec3(x, y, z));
+
+		float scale = (rand() % 20) / 100.0f + 0.05;
+		model = glm::scale(model, glm::vec3(scale));
+
+		float rotAngle = (rand()%360);
+		model = glm::rotate(model, glm::radians(rotAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		matrixArr[i] = model;
+	}
+
+	uint VBO_ins = 0;
+	glGenBuffers(1, &VBO_ins);
+	glBindBuffer(GL_ARRAY_BUFFER,VBO_ins);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * AMOUNT, &matrixArr[0], GL_STATIC_DRAW);
+
+	for (uint i = 0; i < rock->meshVec.size(); ++ i)
+	{
+		glBindVertexArray(rock->meshVec[i].VAO);
+
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+		glEnableVertexAttribArray(5);
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2*sizeof(glm::vec4)));
+		glEnableVertexAttribArray(6);
+		glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3*sizeof(glm::vec4)));
+
+
+		
+		// 参数1: 将location 编号 index 指定为instance 属性
+		// 参数2： 每隔1隔instance， vertex shader 中注进buffer 一个属性值
+		glVertexAttribDivisor(3, 1); // 3号索引为instance，每隔1个实例
+		glVertexAttribDivisor(4, 1);
+		glVertexAttribDivisor(5, 1);
+		glVertexAttribDivisor(6, 1);
+
+		glBindVertexArray(0);
+	}
 }
 
 uint DrawTest::createTexture(const char* fileName) {
@@ -119,7 +196,7 @@ uint DrawTest::createSkyTexture() {
 	};
 
 
-	for (int i = 0 ;i < faces.size(); ++i)
+	for (uint i = 0 ;i < faces.size(); ++i)
 	{
 		AImage* pImg = AImage::loadImage(faces[i].c_str(),false);
 		//unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
@@ -412,7 +489,9 @@ void DrawTest::render() {
 	//UBO
 	//testUboData();
 	//GEO
-	testGeo();
+	//testGeo();
+	// instance
+	testInstance();
 	
 }
 
@@ -718,4 +797,35 @@ void DrawTest::testGeo() {
 	glBindVertexArray(VAO_house);
 	glDrawArrays(GL_POINTS, 0, 4);
 	shaderGeo->end();*/
+}
+
+void DrawTest::testInstance() {
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 1000.0f);
+	glm::mat4 view = cam->getVMatrix();
+	
+
+	planetShader->start();
+	planetShader->setMatrix("projection", projection);
+	planetShader->setMatrix("view", view);
+
+	// draw planet
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+	planetShader->setMatrix("model", model);
+	planet->draw(planetShader);
+
+	// draw rock
+	rockShader->start();
+	rockShader->setMatrix("projection", projection);
+	rockShader->setMatrix("view", view);
+	rockShader->setInt("texture_diffuse1", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, rock->meshVec[0].texVec[0].id); // note: we also made the textures_loaded vector public (instead of private) from the model class.
+	for (unsigned int i = 0; i < rock->meshVec.size(); i++)
+	{
+		glBindVertexArray(rock->meshVec[i].VAO);
+		glDrawElementsInstanced(GL_TRIANGLES, rock->meshVec[i].indexVec.size(), GL_UNSIGNED_INT, 0, AMOUNT);
+		glBindVertexArray(0);
+	}
 }

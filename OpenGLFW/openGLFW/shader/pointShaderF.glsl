@@ -73,5 +73,6 @@ void main()
 	// ------最终结果
 	// 光照强弱= 环境光+漫反射光 + 镜面反射光
 	vec3 result = ambient + diffuse + specular;
-	FragColor = texture((myMaterial.specular1,ourUV) * vec4(result, 1.0f)*attenuation;
+	// FragColor = texture(myMaterial.specular1,ourUV);
+	FragColor = texture(myMaterial.diffuse1,ourUV) * vec4(result, 1.0f)*attenuation;
 };
