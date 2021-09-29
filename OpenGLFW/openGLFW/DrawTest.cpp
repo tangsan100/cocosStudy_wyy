@@ -21,6 +21,7 @@ DrawTest::DrawTest(int w,int h):width(w),height(h){
 	shaderBox		= new Shader();
 	planetShader	= new Shader();
 	rockShader		= new Shader();
+	blinnPhone		= new Shader();
 
 	matrixArr = new glm::mat4[AMOUNT];
 }
@@ -44,9 +45,16 @@ DrawTest::~DrawTest() {
 
 void DrawTest::init() {
 	// 初始化相机
-	glm::vec3 eyes(0.0f, 0.0f, 155.0f);	// 观察位置
-	glm::vec3 front(0.0f, 0.0f, 1.0f);	// 前方位置
-	glm::vec3 popUp(0.0f, 1.0f, 0.0f);  // 相机仰角
+
+	// 相机初始化
+	glm::vec3 eyes(0.0f, 0.0f, 3.0f);
+	glm::vec3 front(0.0f, 0.0f, 1.0f);
+	glm::vec3 popUp(0.0f, 1.0f, 0.0f);
+	
+
+	//glm::vec3 eyes(0.0f, 0.0f, 155.0f);	// 观察位置
+	//glm::vec3 front(0.0f, 0.0f, 1.0f);	// 前方位置
+	//glm::vec3 popUp(0.0f, 1.0f, 0.0f);  // 相机仰角
 	cam->lookAt(eyes, front, popUp);
 	cam->setSensitivity(0.1f);			// 设置相机的灵敏度
 
@@ -54,7 +62,7 @@ void DrawTest::init() {
 	textureBox		= createTexture("res/box.png");
 	textureSpec		= createTexture("res/specular.png");
 	textureWin		= createTexture("res/window.png");
-	texturePlane	= createTexture("res/stone.png");
+	texturePlane	= createTexture("res/plane.jpg");
 	textureSkybox	= createSkyTexture();
 
 	// VAO 初始化
@@ -85,6 +93,7 @@ void DrawTest::init() {
 	shaderGeo->initShader("shader/c4/geoShaderV.glsl", "shader/c4/geoShaderF.glsl", "shader/c4/geoShaderG.glsl");
 	planetShader->initShader("shader/c5/planetV.glsl", "shader/c5/planetF.glsl");
 	rockShader->initShader("shader/c5/rockV.glsl", "shader/c5/rockF.glsl");
+	blinnPhone->initShader("shader/c6/Blinn-PhongV.glsl", "shader/c6/Blinn-PhongF.glsl");
 
 	bindShaderData();
 	initInstanceArray();
@@ -273,7 +282,7 @@ uint DrawTest::createPlane() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(gPlaneVextices), gPlaneVextices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(gPlaneVextices1), gPlaneVextices1, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // 顶点
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Normal
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))); // UV
@@ -491,7 +500,9 @@ void DrawTest::render() {
 	//GEO
 	//testGeo();
 	// instance
-	testInstance();
+	//testInstance();
+	// 测试blinn-phong 模型
+	testBlinPhong();
 	
 }
 
@@ -828,4 +839,47 @@ void DrawTest::testInstance() {
 		glDrawElementsInstanced(GL_TRIANGLES, rock->meshVec[i].indexVec.size(), GL_UNSIGNED_INT, 0, AMOUNT);
 		glBindVertexArray(0);
 	}
+}
+
+void DrawTest::testBlinPhong() {
+
+	// 太阳光的强度
+	glm::vec3 sunLight(1.0f, 1.0f, 1.0f);
+
+	glm::mat4 mMatrix(1.0f);
+	mMatrix = glm::translate(mMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+
+	glm::mat4 vMatrix = cam->getVMatrix();
+	glm::mat4 pMatrix = glm::perspective(glm::radians(60.0f), float(width) / height, 0.1f, 100.0f);
+
+	blinnPhone->start();
+	blinnPhone->setMatrix("mMatrix", mMatrix);
+	blinnPhone->setMatrix("vMatrix", vMatrix);
+	blinnPhone->setMatrix("pMatrix", pMatrix);
+
+	// 材质属性
+	blinnPhone->setInt("material.diffuse", 0);
+	blinnPhone->setInt("material.specular", 0);
+	blinnPhone->setInt("material.shiness", 32);
+
+	// blin flag
+	blinnPhone->setInt("blinn", true);
+	
+	// 传入光照属性
+	blinnPhone->setVec3("light.position", glm::vec3(0.0, 0.0, 0.0));
+	blinnPhone->setVec3("light.dir", cam->getPosition());
+	blinnPhone->setFloat("light.cutOff", cos(glm::radians(12.5f)));
+	blinnPhone->setFloat("light.outCutOff", cos(glm::radians(20.5f)));
+	blinnPhone->setVec3("light.ambient", sunLight);
+	blinnPhone->setVec3("light.diffuse", sunLight*glm::vec3(0.7f));
+	blinnPhone->setVec3("light.specular", sunLight*glm::vec3(0.5f));
+	blinnPhone->setFloat("light.c", 1.0f);
+	blinnPhone->setFloat("light.l", 0.07f);
+	blinnPhone->setFloat("light.q", 0.017f);
+	blinnPhone->setVec3("viewPos", cam->getPosition());
+
+	this->bindTexture(texturePlane);
+	glBindVertexArray(VAO_plane);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	blinnPhone->end();
 }

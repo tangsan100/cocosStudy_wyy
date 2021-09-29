@@ -25,6 +25,7 @@ private:
 	Shader *shaderBox;
 	Shader *planetShader; // 行星
 	Shader *rockShader;
+	Shader *blinnPhone;
 
 	// 材质贴图，光照贴图
 	uint textureBox;
@@ -87,6 +88,7 @@ public:
 	void testUboData();		// 测试UBO
 	void testGeo();
 	void testInstance(); //测试模型，批量绘制
+	void testBlinPhong();
 
 	void camMove(CAM_MOVE type) {
 		cam->move(type);
