@@ -41,7 +41,6 @@ in vec3 FragPos;
 // 用户传入的参数
 uniform tMaterial material;
 uniform tLight  light;
-uniform sampler2D ourTexure;
 uniform vec3 viewPos;
 uniform bool blinn;
 

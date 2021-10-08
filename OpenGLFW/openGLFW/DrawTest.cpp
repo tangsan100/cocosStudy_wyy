@@ -7,6 +7,8 @@
 //#include "stb_image.h"
 
 const static int AMOUNT = 10000;
+// 深度贴图的分辨率
+const uint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
 DrawTest::DrawTest(int w,int h):width(w),height(h){
 	cam				= new Camara();
@@ -22,6 +24,8 @@ DrawTest::DrawTest(int w,int h):width(w),height(h){
 	planetShader	= new Shader();
 	rockShader		= new Shader();
 	blinnPhone		= new Shader();
+	shaderShadow	= new Shader();
+	dirShader		= new Shader();
 
 	matrixArr = new glm::mat4[AMOUNT];
 }
@@ -41,6 +45,8 @@ DrawTest::~DrawTest() {
 	delete planetShader;
 	delete rockShader;
 	delete[]matrixArr;
+	delete shaderShadow;
+	delete dirShader;
 }
 
 void DrawTest::init() {
@@ -58,6 +64,7 @@ void DrawTest::init() {
 	cam->lookAt(eyes, front, popUp);
 	cam->setSensitivity(0.1f);			// 设置相机的灵敏度
 
+
 	// 问题问题贴图
 	textureBox		= createTexture("res/box.png");
 	textureSpec		= createTexture("res/specular.png");
@@ -74,17 +81,19 @@ void DrawTest::init() {
 	VAO_skybox	= createSkyBox();
 	VAO_house	= createHouse();
 	VAO_box		= createModel();
+	depthFbo	= createShadowFbo();
 
 	// UBO
-	UBO_red = createUBO();
+	//UBO_red = createUBO();
 
-	planet = new FF::ffModel("res/planet/planet.obj");
-	rock = new FF::ffModel("res/rock/rock.obj");
+	/*planet = new FF::ffModel("res/planet/planet.obj");
+	rock = new FF::ffModel("res/rock/rock.obj");*/
 	
 	// 初始化shader
+	//shaderCube->initShader("shader/cubeV.glsl", "shader/cubeF.glsl");
+	shaderCube->initShader("shader/cc/cubeV.glsl", "shader/cc/cubeF.glsl");
 	shaderBox->initShader("shader/boxV.glsl", "shader/boxF.glsl");
 	shaderColor->initShader("shader/colorV.glsl", "shader/colorF.glsl");
-	shaderCube->initShader("shader/cubeV.glsl", "shader/cubeF.glsl");
 	shaderBlending->initShader("shader/BlendingV.glsl", "shader/BlendingF.glsl");
 	screenShader->initShader("shader/frameBufferV.glsl", "shader/frameBufferF.glsl");
 	skyShader->initShader("shader/skyboxV.glsl", "shader/skyboxF.glsl");
@@ -94,14 +103,12 @@ void DrawTest::init() {
 	planetShader->initShader("shader/c5/planetV.glsl", "shader/c5/planetF.glsl");
 	rockShader->initShader("shader/c5/rockV.glsl", "shader/c5/rockF.glsl");
 	blinnPhone->initShader("shader/c6/Blinn-PhongV.glsl", "shader/c6/Blinn-PhongF.glsl");
+	shaderShadow->initShader("shader/c6/shadowMapV.glsl","shader/c6/shadowMapF.glsl");
+	dirShader->initShader("shader/c6/dirLightV.glsl","shader/c6/dirLightF.glsl");
 
-	bindShaderData();
-	initInstanceArray();
+	/*bindShaderData();
+	initInstanceArray();*/
 
-	
-
-	
-	
 }
 
 void DrawTest::initInstanceArray() {
@@ -330,12 +337,12 @@ uint DrawTest::createFramBuffer() {
 	// 插值运算
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// 绑定textureBuffer
+	// 绑定texture 作为color 附件，绑定到framebuffer 里面，  用的是第0个colorbuffer 附件
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureBuffer, 0);
 	
 
 	// D/S buffer
-	uint RBO = 0;
+	uint RBO = 0; // render buffer obj
 	glGenRenderbuffers(1, &RBO);
 	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
 	// 24 位分配给深度缓存，8位分配给stencil
@@ -443,6 +450,44 @@ uint DrawTest::createHouse() {
 
 	return VAO;
 }
+
+uint DrawTest::createShadowFbo() {
+	
+	uint depthMapFBO = 0;
+	// 开启framebuffers
+	glGenFramebuffers(1, &depthMapFBO);
+
+	// texture2D 做深度缓存
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+
+	// 注意参数 gl_depth_component 参数，
+	//因为我们只关心深度值，我们要把纹理格式指定为GL_DEPTH_COMPONENT
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// 解决过采样问题 GL_CLAMP_TO_BORDER 超出了剪裁范围，深度为1， 不绘制
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+	/*glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);*/
+
+	// 绑定帧缓存
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	// 只做为深度缓存
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	// 不做绘制
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return depthMapFBO;
+}
 // 启用纹理
 void DrawTest::bindTexture() {
 	glActiveTexture(GL_TEXTURE0);
@@ -473,17 +518,15 @@ void DrawTest::bindShaderData() {
 void DrawTest::render() {
 	cam->update();
 
-	glEnable(GL_DEPTH_TEST);
+	
 	//glCullFace(GL_FRONT);
 	//glEnable(GL_STENCIL_TEST);
 
 	// 设置要清理画布的颜色
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	// 清理画布
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	
-
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
 
 	// 高光绘制
 	//testHightLight();
@@ -502,8 +545,48 @@ void DrawTest::render() {
 	// instance
 	//testInstance();
 	// 测试blinn-phong 模型
-	testBlinPhong();
+	//testBlinPhong();
+
+	// shadowMap
+	testshadowMap();
+
+	//testCube();
 	
+}
+
+void DrawTest::testCube() {
+	// mvp 矩阵变换信息
+	glm::mat4 vMatrix = cam->getVMatrix(); //glm::lookAt(glm::vec3(0.0, 0.0, 3.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+	glm::mat4 pMatrix = glm::perspective(glm::radians(60.0f), float(width) / height, 1.0f, 100.0f);
+
+	//glBindTexture(GL_TEXTURE_2D, textureBox);
+	this->bindTexture();
+
+	static int i = 0;
+
+		glm::mat4 mMatrix(1.0f);
+		mMatrix = glm::mat4(1.0f);
+		mMatrix = glm::rotate(mMatrix, glm::radians(float(glfwGetTime())*(i + 1) * 5), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		// 使用shader 程序
+		shaderCube->start();
+
+		// 传入vp 信息
+		shaderCube->setMatrix("mMatrix", mMatrix);
+		shaderCube->setMatrix("vMatrix", vMatrix);
+		shaderCube->setMatrix("pMatrix", pMatrix);
+
+		// 绑定VAO 主程序
+		glBindVertexArray(VAO_cube);
+
+
+		// 告诉OpenGL 要画一个三角形， 从第0个顶点开始，有效顶点数3个
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		// 解绑shader 程序
+		shaderCube->end();
+
 }
 
 void DrawTest::testHightLight() {
@@ -882,4 +965,102 @@ void DrawTest::testBlinPhong() {
 	glBindVertexArray(VAO_plane);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	blinnPhone->end();
+}
+
+void DrawTest::testshadowMap() {
+	
+	//glEnable(GL_CULL_FACE);
+	// pass 1
+	// create light MVP
+	float near_plane = 1.0, far_plane = 7.5f;
+	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+	glm::mat4 lightViewMat = glm::lookAt(lightPos,glm::vec3(0.0f),glm::vec3(0.0f,1.0f,0.0f));
+	// 正交投影矩阵，左、右、下、上, 以及近、远平面组成的包围盒
+	glm::mat4 orthoMat = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, depthFbo);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	shaderShadow->start();
+	shaderShadow->setMatrix("vMatrix", lightViewMat);
+	shaderShadow->setMatrix("pMatrix", orthoMat);
+	
+	//glCullFace(GL_FRONT);
+	renderScene(shaderShadow);
+	shaderShadow->end();
+	//glCullFace(GL_BACK);
+
+	// pass2  渲染主场景
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, width, height);
+	glClearColor(0.2f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glm::mat4 pMatrix = glm::perspective(glm::radians(45.0f), float(width) / height, 0.1f, 100.0f);
+	dirShader->start();
+	dirShader->setMatrix("pMatrix", pMatrix);
+	dirShader->setMatrix("vMatrix", cam->getVMatrix());
+	dirShader->setFloat("shiness",64.0f);
+	dirShader->setVec3("lightPos", lightPos);
+	dirShader->setVec3("viewPos", cam->getPosition());
+
+	// 光照属性
+	dirShader->setVec3("myLight.ambient", glm::vec3(0.2f));
+	dirShader->setVec3("myLight.diffuse", glm::vec3(0.8f));
+	dirShader->setVec3("myLight.specular", glm::vec3(0.9f));
+
+	// 以光源作为摄像机的投影，传入矩阵变换，用来绘制阴影
+	dirShader->setMatrix("lightSpaceMat", orthoMat*lightViewMat);
+	dirShader->setInt("shadowMap", 1);
+
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	renderScene(dirShader);
+	dirShader->end();
+	
+}
+
+void DrawTest::renderScene(Shader *shader)
+{
+	// floor
+	this->bindTexture(texturePlane);
+	glm::mat4 model = glm::mat4(1.0f);
+	shader->setMatrix("mMatrix", model);
+	glBindVertexArray(VAO_plane);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+	glm::vec3 translates[3] = {
+		glm::vec3(0.0f,1.5f,0.0),
+		glm::vec3(2.0f, 0.0f, 1.0),
+		glm::vec3(-1.0f, 0.0f, 2.0)
+	};
+	glm::vec3 scales[3] = {
+		glm::vec3(0.5f),
+		glm::vec3(0.5f),
+		glm::vec3(0.25f),
+	};
+
+	this->bindTexture(textureBox);
+
+
+	for (uint i = 0; i < 3; i++)
+	{
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, translates[i]);
+		if (i == 2)
+		{
+			model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+		}
+		
+		model = glm::scale(model, scales[i]);
+		shader->setMatrix("mMatrix", model);
+
+		// 绘制立方体
+		// render Cube
+		glBindVertexArray(VAO_box);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+	}
 }

@@ -26,6 +26,8 @@ private:
 	Shader *planetShader; // 行星
 	Shader *rockShader;
 	Shader *blinnPhone;
+	Shader *shaderShadow;
+	Shader *dirShader;//
 
 	// 材质贴图，光照贴图
 	uint textureBox;
@@ -46,9 +48,11 @@ private:
 	uint frameBuffer = 0;
 	uint textureBuffer = 0;
 	uint VAO_texture = 0;
+	uint depthFbo;
 
 	// UBO 
 	uint UBO_red;
+	uint depthMap; // 深度贴图
 
 	// 模型
 	FF::ffModel* planet; //行星
@@ -74,12 +78,14 @@ public:
 	uint createSkyBox();
 	uint createUBO();  // unifrom block
 	uint createHouse();
+	uint createShadowFbo(); // shadowMap 的fbo
 	void bindTexture();
 	void bindTexture(uint textureID);
 	void bindShaderData();  // 绑定ubo 
 	void render();
 
 	//-----test--------
+	void testCube();
 	void testHightLight(); // 高光
 	void testBlending();	// 半透明绘制
 	void testCullFace();	// cullFace 剪裁
@@ -89,6 +95,10 @@ public:
 	void testGeo();
 	void testInstance(); //测试模型，批量绘制
 	void testBlinPhong();
+	void testshadowMap(); // shadowMap
+
+	//
+	void renderScene(Shader *shader);
 
 	void camMove(CAM_MOVE type) {
 		cam->move(type);
