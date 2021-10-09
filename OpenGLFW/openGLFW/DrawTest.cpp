@@ -11,21 +11,23 @@ const static int AMOUNT = 10000;
 const uint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
 DrawTest::DrawTest(int w,int h):width(w),height(h){
-	cam				= new Camara();
-	shaderColor		= new Shader();
-	shaderCube		= new Shader();
-	shaderBlending	= new Shader();
-	screenShader	= new Shader();
-	skyShader		= new Shader();
-	shaderRed		= new Shader();
-	shaderGreen		= new Shader();
-	shaderGeo		= new Shader();
-	shaderBox		= new Shader();
-	planetShader	= new Shader();
-	rockShader		= new Shader();
-	blinnPhone		= new Shader();
-	shaderShadow	= new Shader();
-	dirShader		= new Shader();
+	cam					= new Camara();
+	shaderColor			= new Shader();
+	shaderCube			= new Shader();
+	shaderBlending		= new Shader();
+	screenShader		= new Shader();
+	skyShader			= new Shader();
+	shaderRed			= new Shader();
+	shaderGreen			= new Shader();
+	shaderGeo			= new Shader();
+	shaderBox			= new Shader();
+	planetShader		= new Shader();
+	rockShader			= new Shader();
+	blinnPhone			= new Shader();
+	shaderShadow		= new Shader();
+	dirShader			= new Shader();
+	shaderPsDepth		= new Shader();
+	shaderPointShadow	= new Shader();
 
 	matrixArr = new glm::mat4[AMOUNT];
 }
@@ -47,6 +49,8 @@ DrawTest::~DrawTest() {
 	delete[]matrixArr;
 	delete shaderShadow;
 	delete dirShader;
+	delete shaderPsDepth;
+	delete shaderPointShadow;
 }
 
 void DrawTest::init() {
@@ -62,7 +66,7 @@ void DrawTest::init() {
 	//glm::vec3 front(0.0f, 0.0f, 1.0f);	// 前方位置
 	//glm::vec3 popUp(0.0f, 1.0f, 0.0f);  // 相机仰角
 	cam->lookAt(eyes, front, popUp);
-	cam->setSensitivity(0.1f);			// 设置相机的灵敏度
+	cam->setSensitivity(0.05f);			// 设置相机的灵敏度
 
 
 	// 问题问题贴图
@@ -73,15 +77,16 @@ void DrawTest::init() {
 	textureSkybox	= createSkyTexture();
 
 	// VAO 初始化
-	VAO_cube	= createModel();
-	VAO_plane	= createPlane();
-	VAO_win		= createWindow();
-	frameBuffer = createFramBuffer();
-	VAO_texture = createScreenPlane();
-	VAO_skybox	= createSkyBox();
-	VAO_house	= createHouse();
-	VAO_box		= createModel();
-	depthFbo	= createShadowFbo();
+	VAO_cube		= createModel();
+	VAO_plane		= createPlane();
+	VAO_win			= createWindow();
+	frameBuffer		= createFramBuffer();
+	VAO_texture		= createScreenPlane();
+	VAO_skybox		= createSkyBox();
+	VAO_house		= createHouse();
+	VAO_box			= createModel();
+	depthFbo		= createShadowFbo();
+	depthCubeMapFbo = createPointShadowFbo();
 
 	// UBO
 	//UBO_red = createUBO();
@@ -105,6 +110,8 @@ void DrawTest::init() {
 	blinnPhone->initShader("shader/c6/Blinn-PhongV.glsl", "shader/c6/Blinn-PhongF.glsl");
 	shaderShadow->initShader("shader/c6/shadowMapV.glsl","shader/c6/shadowMapF.glsl");
 	dirShader->initShader("shader/c6/dirLightV.glsl","shader/c6/dirLightF.glsl");
+	shaderPsDepth->initShader("shader/c6/shadowDepthV.glsl", "shader/c6/shadowDepthF.glsl", "shader/c6/shadowDepthG.glsl");
+	shaderPointShadow->initShader("shader/c6/pointShadowV.glsl", "shader/c6/pointShadowF.glsl");
 
 	/*bindShaderData();
 	initInstanceArray();*/
@@ -488,6 +495,46 @@ uint DrawTest::createShadowFbo() {
 
 	return depthMapFBO;
 }
+
+uint DrawTest::createPointShadowFbo() {
+
+
+	uint depthMapFBO;
+	glGenFramebuffers(1, &depthMapFBO);
+
+
+	// 创建cubeMap 帧缓存，深度缓存
+	glGenTextures(1, &depthCubemap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+
+
+	for (uint i = 0; i < 6; ++i)
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
+			SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	// 把cubeMap 绑定到fbo
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return depthMapFBO;
+
+}
+
+
 // 启用纹理
 void DrawTest::bindTexture() {
 	glActiveTexture(GL_TEXTURE0);
@@ -548,7 +595,9 @@ void DrawTest::render() {
 	//testBlinPhong();
 
 	// shadowMap
-	testshadowMap();
+	//testshadowMap();
+	// pointShadow
+	testPointShadowMap();
 
 	//testCube();
 	
@@ -1059,8 +1108,128 @@ void DrawTest::renderScene(Shader *shader)
 
 		// 绘制立方体
 		// render Cube
-		glBindVertexArray(VAO_box);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
+		this->renderBox();
 	}
+}
+
+void DrawTest::testPointShadowMap() {
+
+	glEnable(GL_CULL_FACE);
+
+	glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+	//创建6个视椎体
+	GLfloat aspect = (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT;
+	GLfloat near = 1.0f;
+	GLfloat far = 25.0f;
+	glm::mat4 shadowProj = glm::perspective(90.0f, aspect, near, far);
+	std::vector<glm::mat4> shadowTransforms;
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+
+
+	// 1 绘制cubemap 深度 
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthCubeMapFbo);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	{
+		// 具体的绘制
+		shaderPsDepth->start();
+		for (GLuint i = 0; i < 6; ++i) {
+			shaderPsDepth->setMatrix(("shadowMatrices[" + std::to_string(i) + "]").c_str(), shadowTransforms[i]);
+		}
+		shaderPsDepth->setFloat("far_plane", far);
+		shaderPsDepth->setVec3("lightPos", lightPos);
+		
+		renderPointShadowScene(shaderPsDepth);
+		shaderPsDepth->end();
+
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
+	// 2. 正常的场景绘制
+	glViewport(0, 0, width, height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+
+	shaderPointShadow->start();
+	glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)width / (float)height, 0.1f, 100.0f);
+	glm::mat4 view = cam->getVMatrix();
+	shaderPointShadow->setMatrix("pMatrix", projection);
+	shaderPointShadow->setMatrix("vMatrix", view);
+
+	// Set light uniforms
+	shaderPointShadow->setVec3("lightPos", lightPos);
+	shaderPointShadow->setVec3("viewPos", cam->getPosition());
+
+	// Enable/Disable shadows by pressing 'SPACE'
+	shaderPointShadow->setInt("shadows", true);
+	shaderPointShadow->setFloat("far_plane", far);
+	shaderPointShadow->setInt("depthMap", 1);
+	
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureBox);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+	renderPointShadowScene(shaderPointShadow);
+
+	shaderPointShadow->end();
+	
+}
+
+void DrawTest::renderPointShadowScene(Shader* shader) {
+	// Room cube
+	glm::mat4 model(1.0f);
+	model = glm::scale(model, glm::vec3(30.0));
+	shader->setMatrix("mMatrix", model);
+	glDisable(GL_CULL_FACE);
+	shader->setInt("reverse_normals", 1); // 法线翻转，如果是大盒子要翻转，否则不能正常渲染
+	this->renderBox();
+	shader->setInt("reverse_normals", 0); // 
+	glEnable(GL_CULL_FACE);
+
+
+	// Cubes 1
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(4.0f, -3.5f, 0.0));
+	shader->setMatrix("mMatrix", model);
+	this->renderBox();
+
+	// Cubes 2
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(2.0f, 3.0f, 1.0));
+	model = glm::scale(model, glm::vec3(1.5));
+	shader->setMatrix("mMatrix", model);
+	this->renderBox();
+
+	// Cubes 3
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.0f, -1.0f, 0.0));
+	shader->setMatrix("mMatrix", model);
+	this->renderBox();
+
+	// cubes 4
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.5f, 1.0f, 1.5));
+	shader->setMatrix("mMatrix", model);
+	this->renderBox();
+
+	// cubes 5
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.5f, 2.0f, -3.0));
+	model = glm::rotate(model, 60.0f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+	model = glm::scale(model, glm::vec3(1.5));
+	shader->setMatrix("mMatrix", model);
+	this->renderBox();
+}
+
+void DrawTest::renderBox() {
+	glBindVertexArray(VAO_box);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
 }

@@ -28,6 +28,8 @@ private:
 	Shader *blinnPhone;
 	Shader *shaderShadow;
 	Shader *dirShader;//
+	Shader *shaderPsDepth; // Ps :pointShadow
+	Shader *shaderPointShadow; // 点光源的shadow
 
 	// 材质贴图，光照贴图
 	uint textureBox;
@@ -49,10 +51,12 @@ private:
 	uint textureBuffer = 0;
 	uint VAO_texture = 0;
 	uint depthFbo;
+	uint depthCubeMapFbo;
 
 	// UBO 
 	uint UBO_red;
 	uint depthMap; // 深度贴图
+	uint depthCubemap; // cubeMap 的深度缓存
 
 	// 模型
 	FF::ffModel* planet; //行星
@@ -79,6 +83,7 @@ public:
 	uint createUBO();  // unifrom block
 	uint createHouse();
 	uint createShadowFbo(); // shadowMap 的fbo
+	uint createPointShadowFbo();
 	void bindTexture();
 	void bindTexture(uint textureID);
 	void bindShaderData();  // 绑定ubo 
@@ -96,9 +101,12 @@ public:
 	void testInstance(); //测试模型，批量绘制
 	void testBlinPhong();
 	void testshadowMap(); // shadowMap
+	void testPointShadowMap();
 
 	//
 	void renderScene(Shader *shader);
+	void renderPointShadowScene(Shader* shader);
+	void renderBox();
 
 	void camMove(CAM_MOVE type) {
 		cam->move(type);
