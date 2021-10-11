@@ -30,6 +30,7 @@ private:
 	Shader *dirShader;//
 	Shader *shaderPsDepth; // Ps :pointShadow
 	Shader *shaderPointShadow; // 点光源的shadow
+	Shader *pointShader; // 点光源
 
 	// 材质贴图，光照贴图
 	uint textureBox;
@@ -61,6 +62,7 @@ private:
 	// 模型
 	FF::ffModel* planet; //行星
 	FF::ffModel* rock;	// 陨石
+	FF::ffModel* bag; // 背包模型
 
 	glm::mat4* matrixArr;
 public:
@@ -107,6 +109,9 @@ public:
 	void renderScene(Shader *shader);
 	void renderPointShadowScene(Shader* shader);
 	void renderBox();
+
+	// 测试平行光
+	void testPointLight();
 
 	void camMove(CAM_MOVE type) {
 		cam->move(type);

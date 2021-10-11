@@ -32,6 +32,11 @@ namespace FF {
 				num = std::to_string(specularN++);
 			}
 
+			if (typeName == TEXTURE_HEIGHT_STR)
+			{
+				num = std::to_string(0); // 法线贴图
+			}
+
 			shader->setInt("myMaterial."+ typeName + num, i);
 			glBindTexture(GL_TEXTURE_2D, texVec[i].id);
 		}
@@ -75,6 +80,10 @@ namespace FF {
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(ffVertex), (void*)(offsetof(ffVertex, texCoord)));
 
+		//切线
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(ffVertex), (void*)(offsetof(ffVertex, tangent)));
+
 		//glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
@@ -91,8 +100,8 @@ namespace FF {
 	void ffModel::loadModel(std::string path) {
 		Assimp::Importer importer;
 		//读取模型， 参数1：路径
-		// 参数2：后处理，三角形| 反转UV 坐标
-		const aiScene* scene = importer.ReadFile(path,aiProcess_Triangulate|aiProcess_FlipUVs);
+		// 参数2：后处理，三角形| 反转UV 坐标|模型顶点对于有tangent 信息做预处理
+		const aiScene* scene = importer.ReadFile(path,aiProcess_Triangulate|aiProcess_FlipUVs|aiProcess_CalcTangentSpace);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 			std::cout << "model read fail" << std::endl;
@@ -123,24 +132,37 @@ namespace FF {
 		for (uint i = 0; i < mesh->mNumVertices; ++i)
 		{
 			ffVertex vertext;
+			// 顶点
 			glm::vec3 pos;
 			pos.x = mesh->mVertices[i].x;
 			pos.y = mesh->mVertices[i].y;
 			pos.z = mesh->mVertices[i].z;
 			vertext.pos = pos;
 
+			//  法线
 			glm::vec3 normal;
 			normal.x = mesh->mNormals[i].x;
 			normal.y = mesh->mNormals[i].y;
 			normal.z = mesh->mNormals[i].z;
 			vertext.normal = normal;
 
+			// 贴图uv
 			if (mesh->mTextureCoords[0])
 			{
 				glm::vec2 texCoord(0.0f);
 				texCoord.x = mesh->mTextureCoords[0][i].x;
 				texCoord.y = mesh->mTextureCoords[0][i].y;
 				vertext.texCoord = texCoord;
+			}
+
+			// 法线贴图，切线
+			if (mesh->mTangents)
+			{
+				glm::vec3 tangent;
+				tangent.x = mesh->mTangents[i].x;
+				tangent.y = mesh->mTangents[i].y;
+				tangent.z = mesh->mTangents[i].z;
+				vertext.tangent = tangent;
 			}
 
 			vertexVec.push_back(vertext);
@@ -165,6 +187,9 @@ namespace FF {
 
 			std::vector<ffTexture> specular = loadMaterialTextures(mat, aiTextureType_SPECULAR, TEXTURE_SPECULAR_STR);
 			texVec.insert(texVec.end(), specular.begin(), specular.end());
+
+			std::vector<ffTexture> normalMaps = loadMaterialTextures(mat, aiTextureType_HEIGHT, TEXTURE_HEIGHT_STR);
+			texVec.insert(texVec.end(), normalMaps.begin(), normalMaps.end());
 		}
 
 		return ffMesh(vertexVec, indexVec, texVec);

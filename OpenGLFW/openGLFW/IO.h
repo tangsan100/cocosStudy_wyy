@@ -11,6 +11,7 @@ namespace FF {
 	
 #define TEXTURE_DIFFUSE_STR "diffuse"
 #define TEXTURE_SPECULAR_STR "specular"
+#define TEXTURE_HEIGHT_STR "tangent"
 
 
 	struct ffVertex 
@@ -18,11 +19,13 @@ namespace FF {
 		glm::vec3 pos;
 		glm::vec3 normal;
 		glm::vec2 texCoord;
+		glm::vec3 tangent;
 
 		ffVertex() {
 			pos = glm::vec3(0.0f);
 			normal = glm::vec3(0.0f);
 			texCoord = glm::vec2(0.0f);
+			tangent = glm::vec3(0.0f);
 		}
 	};
 

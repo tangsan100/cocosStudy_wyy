@@ -28,6 +28,7 @@ DrawTest::DrawTest(int w,int h):width(w),height(h){
 	dirShader			= new Shader();
 	shaderPsDepth		= new Shader();
 	shaderPointShadow	= new Shader();
+	pointShader			= new Shader();
 
 	matrixArr = new glm::mat4[AMOUNT];
 }
@@ -51,6 +52,7 @@ DrawTest::~DrawTest() {
 	delete dirShader;
 	delete shaderPsDepth;
 	delete shaderPointShadow;
+	delete pointShader;
 }
 
 void DrawTest::init() {
@@ -93,6 +95,8 @@ void DrawTest::init() {
 
 	/*planet = new FF::ffModel("res/planet/planet.obj");
 	rock = new FF::ffModel("res/rock/rock.obj");*/
+
+	bag =  new FF::ffModel("res/backpack/backpack.obj");
 	
 	// 初始化shader
 	//shaderCube->initShader("shader/cubeV.glsl", "shader/cubeF.glsl");
@@ -112,6 +116,7 @@ void DrawTest::init() {
 	dirShader->initShader("shader/c6/dirLightV.glsl","shader/c6/dirLightF.glsl");
 	shaderPsDepth->initShader("shader/c6/shadowDepthV.glsl", "shader/c6/shadowDepthF.glsl", "shader/c6/shadowDepthG.glsl");
 	shaderPointShadow->initShader("shader/c6/pointShadowV.glsl", "shader/c6/pointShadowF.glsl");
+	pointShader->initShader("shader/pointShaderV.glsl", "shader/pointShaderF.glsl");
 
 	/*bindShaderData();
 	initInstanceArray();*/
@@ -596,9 +601,11 @@ void DrawTest::render() {
 
 	// shadowMap
 	//testshadowMap();
-	// pointShadow
-	testPointShadowMap();
+	// pointShadow 点光源影子
+	//testPointShadowMap();
 
+	// 测试点光源
+	testPointLight();
 	//testCube();
 	
 }
@@ -1232,4 +1239,74 @@ void DrawTest::renderBox() {
 	glBindVertexArray(VAO_box);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);
+}
+
+
+// 测试点光源
+void DrawTest::testPointLight() {
+	// 太阳光的位置
+	glm::vec3 lightPos(3.0f, 1.0f, -1.0f);
+	// 太阳光的强度
+	glm::vec3 sunLight(1.0f, 1.0f, 1.0f);
+
+
+
+	// 激活材质贴图
+	this->bindTexture();
+
+	// mvp 矩阵变换信息
+	glm::mat4 pMatrix = glm::perspective(glm::radians(60.0f), float(width) / height, 1.0f, 100.0f);
+	glm::mat4 mMatrix(1.0f);
+
+	// 使用shader 程序
+	pointShader->start();
+
+
+	// 传入光照属性
+	pointShader->setVec3("Light.pos", lightPos);
+	pointShader->setVec3("Light.ambient", sunLight*glm::vec3(0.1f));
+	pointShader->setVec3("Light.diffuse", sunLight*glm::vec3(0.7f));
+	pointShader->setVec3("Light.specular", sunLight*glm::vec3(0.5f));
+	pointShader->setFloat("Light.c", 1.0f);
+	pointShader->setFloat("Light.l", 0.07f);
+	pointShader->setFloat("Light.q", 0.017f);
+
+
+	// 传入材质属性
+	/*pointShader->setInt("myMaterial.diffuse1", 0);
+	pointShader->setInt("myMaterial.specular1", 1);
+	pointShader->setFloat("myMaterial.shiness", 32);*/
+
+	pointShader->setFloat("myMaterial.shiness", 32);
+
+	// 传入vp 信息
+
+	pointShader->setMatrix("vMatrix", cam->getVMatrix());
+	pointShader->setMatrix("pMatrix", pMatrix);
+	pointShader->setVec3("viewPos", cam->getPosition());
+
+	mMatrix = glm::translate(mMatrix, glm::vec3(0.0f, 0.0f, -1.0f));
+
+	mMatrix = glm::rotate(mMatrix, glm::radians(30.0f), glm::vec3(0.0, 1.0, 0.0));
+	mMatrix = glm::scale(mMatrix, glm::vec3(0.5, 0.5, 0.5));
+	pointShader->setMatrix("mMatrix", mMatrix);
+	/*glBindVertexArray(VAO_cube);
+	glDrawArrays(GL_TRIANGLES, 0, 36);*/
+
+	bag->draw(pointShader);
+
+	// 解绑shader 程序
+	pointShader->end();
+
+	//// 太阳光的位置
+	//mMatrix = glm::mat4(1.0f);
+	//mMatrix = glm::translate(mMatrix, glm::vec3(1.0f, 2.0f, 1.0f));
+
+	//sunShader->start();
+	//sunShader->setMatrix("mMatrix", mMatrix);
+	//sunShader->setMatrix("vMatrix", cam->getVMatrix());
+	//sunShader->setMatrix("pMatrix", pMatrix);
+	//glBindVertexArray(VAO_sun);
+	//glDrawArrays(GL_TRIANGLES, 0, 36);
+	//sunShader->end();
 }
